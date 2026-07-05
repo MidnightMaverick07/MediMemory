@@ -121,7 +121,7 @@ export default function TopHeader({ currentPatientId, role, onMenuClick }: TopHe
       <div className="flex items-center gap-3">
         {/* Back to Directory button */}
         <Link
-          href="/"
+          href="/patients"
           className="flex items-center gap-1 px-3 py-1.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-750 light:border-slate-200 rounded-xl text-[11px] font-bold text-slate-300 light:text-slate-700 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
