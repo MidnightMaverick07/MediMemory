@@ -47,7 +47,7 @@ const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice
 /* ── Custom Node Component ── */
 /* ── Custom Node Component ── */
 const CustomNode = ({ data }: { data: any }) => {
-  const { label, type, isPatient, isSelected, isDimmed, isHeader, isMore } = data;
+  const { label, type, isPatient, isSelected, isDimmed, isHeader, isMore, isLess } = data;
   const cat = catOf(type);
   
   if (isHeader) {
@@ -66,6 +66,17 @@ const CustomNode = ({ data }: { data: any }) => {
         <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
         <span className="text-[10px] font-black leading-none">{label}</span>
         <span className="text-[7.5px] font-bold uppercase tracking-wider mt-0.5 opacity-80">more</span>
+        <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
+      </div>
+    );
+  }
+
+  if (isLess) {
+    return (
+      <div className={`w-10 h-10 rounded-full flex flex-col items-center justify-center border-2 bg-slate-950/90 font-bold transition-all duration-300 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
+           style={{ borderColor: cat.color, color: cat.color }}>
+        <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
+        <span className="text-[10px] font-black leading-none">{label}</span>
         <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
       </div>
     );
@@ -189,6 +200,13 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
   const [showAllEdges, setShowAllEdges] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    conditions: false,
+    medications: false,
+    labs: false,
+    procedures: false,
+    reports: false,
+  });
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdgesState, onEdgesChange] = useEdgesState<any>([]);
@@ -276,114 +294,261 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
       });
     };
 
+    // Helper to add - Less node
+    const addLess = (id: string, x: number, y: number, type: string) => {
+      result.push({
+        id: `less-${id}`,
+        type: "custom",
+        position: { x: x - 20, y: y - 20 }, // offset Less circle size (40x40) to center it
+        data: { label: "- Less", isLess: true, type },
+      });
+    };
+
     // 1. TOP SPOKE: Conditions (Up to 3 nodes)
+    const isConditionsExpanded = expandedCategories.conditions;
     if (conditions.length > 0) {
       addHeader("conditions", "Conditions", X_C, Y_C - 230, "disease");
-      const visible = conditions.slice(0, LIMIT);
-      const N = visible.length;
-      visible.forEach((node, i) => {
-        let x = X_C;
-        let y = Y_C - 150;
-        if (N === 2) {
-          x = X_C - 70 + i * 140;
-          y = Y_C - 140;
-        } else if (N === 3) {
-          if (i === 0) { x = X_C - 120; y = Y_C - 130; }
-          else if (i === 1) { x = X_C; y = Y_C - 170; }
-          else if (i === 2) { x = X_C + 120; y = Y_C - 130; }
-        }
-        result.push({
-          id: node.id,
-          type: "custom",
-          position: { x: x - 40, y: y - 40 }, // offset by half card size (40px)
-          data: { ...node },
+      if (!isConditionsExpanded) {
+        const visible = conditions.slice(0, LIMIT);
+        const N = visible.length;
+        visible.forEach((node, i) => {
+          let x = X_C;
+          let y = Y_C - 150;
+          if (N === 2) {
+            x = X_C - 70 + i * 140;
+            y = Y_C - 140;
+          } else if (N === 3) {
+            if (i === 0) { x = X_C - 120; y = Y_C - 130; }
+            else if (i === 1) { x = X_C; y = Y_C - 170; }
+            else if (i === 2) { x = X_C + 120; y = Y_C - 130; }
+          }
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: x - 40, y: y - 40 }, // offset by half card size (40px)
+            data: { ...node },
+          });
         });
-      });
-      if (conditions.length > LIMIT) {
-        addMore("conditions", conditions.length - LIMIT, X_C + 180, Y_C - 90, "disease");
+        if (conditions.length > LIMIT) {
+          addMore("conditions", conditions.length - LIMIT, X_C + 180, Y_C - 90, "disease");
+        }
+      } else {
+        // Expanded: Grid layout
+        const visible = conditions;
+        visible.forEach((node, i) => {
+          const row = Math.floor(i / 4);
+          const col = i % 4;
+          const N_row = Math.min(visible.length + 1 - row * 4, 4);
+          const startX = X_C - ((N_row - 1) / 2) * 120;
+          const x = startX + col * 120;
+          const y = Y_C - 140 - row * 75;
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: x - 40, y: y - 40 },
+            data: { ...node },
+          });
+        });
+        // Less node
+        const idx = visible.length;
+        const row = Math.floor(idx / 4);
+        const col = idx % 4;
+        const N_row = Math.min(visible.length + 1 - row * 4, 4);
+        const startX = X_C - ((N_row - 1) / 2) * 120;
+        const x = startX + col * 120;
+        const y = Y_C - 140 - row * 75;
+        addLess("conditions", x, y, "disease");
       }
     }
 
     // 2. LEFT SPOKE: Medications (Up to 3 nodes, vertical list)
+    const isMedsExpanded = expandedCategories.medications;
     if (medications.length > 0) {
       addHeader("medications", "Medications", X_C - 270, Y_C - 150, "medication");
-      const visible = medications.slice(0, LIMIT);
-      visible.forEach((node, i) => {
-        result.push({
-          id: node.id,
-          type: "custom",
-          position: { x: X_C - 290, y: Y_C - 115 + i * 60 }, // aligns circles centered at X_C-270
-          data: { ...node },
+      if (!isMedsExpanded) {
+        const visible = medications.slice(0, LIMIT);
+        visible.forEach((node, i) => {
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: X_C - 290, y: Y_C - 115 + i * 60 }, // aligns circles centered at X_C-270
+            data: { ...node },
+          });
         });
-      });
-      if (medications.length > LIMIT) {
-        addMore("medications", medications.length - LIMIT, X_C - 270, Y_C - 95 + LIMIT * 60, "medication");
+        if (medications.length > LIMIT) {
+          addMore("medications", medications.length - LIMIT, X_C - 270, Y_C - 95 + LIMIT * 60, "medication");
+        }
+      } else {
+        // Expanded: Multi-column vertical
+        const visible = medications;
+        visible.forEach((node, i) => {
+          const col = Math.floor(i / 5);
+          const row = i % 5;
+          const x = X_C - 290 - col * 120;
+          const y = Y_C - 115 + row * 60;
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x, y },
+            data: { ...node },
+          });
+        });
+        // Less node
+        const idx = visible.length;
+        const col = Math.floor(idx / 5);
+        const row = idx % 5;
+        const x = X_C - 270 - col * 120;
+        const y = Y_C - 95 + row * 60;
+        addLess("medications", x, y, "medication");
       }
     }
 
     // 3. RIGHT SPOKE: Lab Results (Up to 3 nodes, vertical list)
+    const isLabsExpanded = expandedCategories.labs;
     if (labs.length > 0) {
       addHeader("labs", "Lab Results", X_C + 270, Y_C - 150, "concept");
-      const visible = labs.slice(0, LIMIT);
-      visible.forEach((node, i) => {
-        result.push({
-          id: node.id,
-          type: "custom",
-          position: { x: X_C + 250, y: Y_C - 115 + i * 60 }, // aligns circles centered at X_C+270
-          data: { ...node },
+      if (!isLabsExpanded) {
+        const visible = labs.slice(0, LIMIT);
+        visible.forEach((node, i) => {
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: X_C + 250, y: Y_C - 115 + i * 60 }, // aligns circles centered at X_C+270
+            data: { ...node },
+          });
         });
-      });
-      if (labs.length > LIMIT) {
-        addMore("labs", labs.length - LIMIT, X_C + 270, Y_C - 95 + LIMIT * 60, "concept");
+        if (labs.length > LIMIT) {
+          addMore("labs", labs.length - LIMIT, X_C + 270, Y_C - 95 + LIMIT * 60, "concept");
+        }
+      } else {
+        // Expanded: Multi-column vertical
+        const visible = labs;
+        visible.forEach((node, i) => {
+          const col = Math.floor(i / 5);
+          const row = i % 5;
+          const x = X_C + 250 + col * 120;
+          const y = Y_C - 115 + row * 60;
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x, y },
+            data: { ...node },
+          });
+        });
+        // Less node
+        const idx = visible.length;
+        const col = Math.floor(idx / 5);
+        const row = idx % 5;
+        const x = X_C + 270 + col * 120;
+        const y = Y_C - 95 + row * 60;
+        addLess("labs", x, y, "concept");
       }
     }
 
     // 4. BOTTOM LEFT SPOKE: Procedures (Up to 2 nodes, horizontal)
+    const isProceduresExpanded = expandedCategories.procedures;
     if (procedures.length > 0) {
       addHeader("procedures", "Procedures", X_C - 130, Y_C + 110, "surgery");
-      const visible = procedures.slice(0, 2);
-      const N = visible.length;
-      visible.forEach((node, i) => {
-        let x = X_C - 130;
-        if (N === 2) {
-          x = X_C - 190 + i * 120;
-        }
-        result.push({
-          id: node.id,
-          type: "custom",
-          position: { x: x - 40, y: Y_C + 175 - 40 },
-          data: { ...node },
+      if (!isProceduresExpanded) {
+        const visible = procedures.slice(0, 2);
+        const N = visible.length;
+        visible.forEach((node, i) => {
+          let x = X_C - 130;
+          if (N === 2) {
+            x = X_C - 190 + i * 120;
+          }
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: x - 40, y: Y_C + 175 - 40 },
+            data: { ...node },
+          });
         });
-      });
-      if (procedures.length > 2) {
-        addMore("procedures", procedures.length - 2, X_C - 130 + 100, Y_C + 245, "surgery");
+        if (procedures.length > 2) {
+          addMore("procedures", procedures.length - 2, X_C - 130 + 100, Y_C + 245, "surgery");
+        }
+      } else {
+        // Expanded: Grid layout downwards
+        const visible = procedures;
+        visible.forEach((node, i) => {
+          const row = Math.floor(i / 3);
+          const col = i % 3;
+          const N_row = Math.min(visible.length + 1 - row * 3, 3);
+          const startX = X_C - 130 - ((N_row - 1) / 2) * 110;
+          const x = startX + col * 110;
+          const y = Y_C + 175 + row * 75;
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: x - 40, y: y - 40 },
+            data: { ...node },
+          });
+        });
+        // Less node
+        const idx = visible.length;
+        const row = Math.floor(idx / 3);
+        const col = idx % 3;
+        const N_row = Math.min(visible.length + 1 - row * 3, 3);
+        const startX = X_C - 130 - ((N_row - 1) / 2) * 110;
+        const x = startX + col * 110;
+        const y = Y_C + 175 + row * 75;
+        addLess("procedures", x, y, "surgery");
       }
     }
 
     // 5. BOTTOM RIGHT SPOKE: Reports (Up to 2 nodes, horizontal)
+    const isReportsExpanded = expandedCategories.reports;
     if (reports.length > 0) {
       addHeader("reports", "Reports", X_C + 130, Y_C + 110, "report");
-      const visible = reports.slice(0, 2);
-      const N = visible.length;
-      visible.forEach((node, i) => {
-        let x = X_C + 130;
-        if (N === 2) {
-          x = X_C + 70 + i * 120;
-        }
-        result.push({
-          id: node.id,
-          type: "custom",
-          position: { x: x - 40, y: Y_C + 175 - 40 },
-          data: { ...node },
+      if (!isReportsExpanded) {
+        const visible = reports.slice(0, 2);
+        const N = visible.length;
+        visible.forEach((node, i) => {
+          let x = X_C + 130;
+          if (N === 2) {
+            x = X_C + 70 + i * 120;
+          }
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: x - 40, y: Y_C + 175 - 40 },
+            data: { ...node },
+          });
         });
-      });
-      if (reports.length > 2) {
-        addMore("reports", reports.length - 2, X_C + 130 + 100, Y_C + 245, "report");
+        if (reports.length > 2) {
+          addMore("reports", reports.length - 2, X_C + 130 + 100, Y_C + 245, "report");
+        }
+      } else {
+        // Expanded: Grid layout downwards
+        const visible = reports;
+        visible.forEach((node, i) => {
+          const row = Math.floor(i / 3);
+          const col = i % 3;
+          const N_row = Math.min(visible.length + 1 - row * 3, 3);
+          const startX = X_C + 130 - ((N_row - 1) / 2) * 110;
+          const x = startX + col * 110;
+          const y = Y_C + 175 + row * 75;
+          result.push({
+            id: node.id,
+            type: "custom",
+            position: { x: x - 40, y: y - 40 },
+            data: { ...node },
+          });
+        });
+        // Less node
+        const idx = visible.length;
+        const row = Math.floor(idx / 3);
+        const col = idx % 3;
+        const N_row = Math.min(visible.length + 1 - row * 3, 3);
+        const startX = X_C + 130 - ((N_row - 1) / 2) * 110;
+        const x = startX + col * 110;
+        const y = Y_C + 175 + row * 75;
+        addLess("reports", x, y, "report");
       }
     }
 
     return result;
-  }, [rawNodes, patientNode]);
+  }, [rawNodes, patientNode, expandedCategories]);
 
   const neighbors = useMemo(() => {
     if (!selectedNodeId) return new Set<string>();
@@ -445,65 +610,137 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
     const labs = otherNodes.filter(n => n.type === "concept" || n.type === "doctor" || n.type === "hospital" || n.type === "timeline_event");
 
     const LIMIT = 3;
+    const isConditionsExpanded = expandedCategories.conditions;
+    const isMedsExpanded = expandedCategories.medications;
+    const isLabsExpanded = expandedCategories.labs;
+    const isProceduresExpanded = expandedCategories.procedures;
+    const isReportsExpanded = expandedCategories.reports;
 
-    // Add dashed edges to the "more" placeholder nodes
-    if (medications.length > LIMIT && patientNode) {
-      resultEdges.push({
-        id: "edge-more-meds",
-        source: patientNode.id,
-        target: "more-medications",
-        label: "prescribed",
-        animated: false,
-        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
-        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
-      });
+    // Add dashed edges to the "more" placeholder nodes or collapse connection for "less" nodes
+    if (patientNode) {
+      if (medications.length > LIMIT) {
+        if (!isMedsExpanded) {
+          resultEdges.push({
+            id: "edge-more-meds",
+            source: patientNode.id,
+            target: "more-medications",
+            label: "prescribed",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        } else {
+          resultEdges.push({
+            id: "edge-less-meds",
+            source: patientNode.id,
+            target: "less-medications",
+            label: "collapse",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        }
+      }
+
+      if (labs.length > LIMIT) {
+        if (!isLabsExpanded) {
+          resultEdges.push({
+            id: "edge-more-labs",
+            source: patientNode.id,
+            target: "more-labs",
+            label: "has result",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        } else {
+          resultEdges.push({
+            id: "edge-less-labs",
+            source: patientNode.id,
+            target: "less-labs",
+            label: "collapse",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        }
+      }
+
+      if (conditions.length > LIMIT) {
+        if (!isConditionsExpanded) {
+          resultEdges.push({
+            id: "edge-more-conditions",
+            source: patientNode.id,
+            target: "more-conditions",
+            label: "diagnosed with",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        } else {
+          resultEdges.push({
+            id: "edge-less-conditions",
+            source: patientNode.id,
+            target: "less-conditions",
+            label: "collapse",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        }
+      }
+
+      if (procedures.length > 2) {
+        if (!isProceduresExpanded) {
+          resultEdges.push({
+            id: "edge-more-procedures",
+            source: patientNode.id,
+            target: "more-procedures",
+            label: "underwent",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        } else {
+          resultEdges.push({
+            id: "edge-less-procedures",
+            source: patientNode.id,
+            target: "less-procedures",
+            label: "collapse",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        }
+      }
+
+      if (reports.length > 2) {
+        if (!isReportsExpanded) {
+          resultEdges.push({
+            id: "edge-more-reports",
+            source: patientNode.id,
+            target: "more-reports",
+            label: "recorded in",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        } else {
+          resultEdges.push({
+            id: "edge-less-reports",
+            source: patientNode.id,
+            target: "less-reports",
+            label: "collapse",
+            animated: false,
+            style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+            labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+          });
+        }
+      }
     }
-    if (labs.length > LIMIT && patientNode) {
-      resultEdges.push({
-        id: "edge-more-labs",
-        source: patientNode.id,
-        target: "more-labs",
-        label: "has result",
-        animated: false,
-        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
-        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
-      });
-    }
-    if (conditions.length > LIMIT && patientNode) {
-      resultEdges.push({
-        id: "edge-more-conditions",
-        source: patientNode.id,
-        target: "more-conditions",
-        label: "diagnosed with",
-        animated: false,
-        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
-        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
-      });
-    }
-    if (procedures.length > 2 && patientNode) {
-      resultEdges.push({
-        id: "edge-more-procedures",
-        source: patientNode.id,
-        target: "more-procedures",
-        label: "underwent",
-        animated: false,
-        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
-        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
-      });
-    }
-    if (reports.length > 2 && patientNode) {
-      resultEdges.push({
-        id: "edge-more-reports",
-        source: patientNode.id,
-        target: "more-reports",
-        label: "recorded in",
-        animated: false,
-        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
-        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
-      });
-    }
+
     return resultEdges;
-  }, [rawEdges, visibleNodeIds, showAllEdges, selectedNodeId, patientNode, rawNodes]);
+  }, [rawEdges, visibleNodeIds, showAllEdges, selectedNodeId, patientNode, rawNodes, expandedCategories]);
 
   /* ── Sync positions and states into React Flow nodes/edges ── */
   useEffect(() => {
@@ -566,10 +803,27 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
 
   /* ── Selection interaction handlers ── */
   const onNodeClick = useCallback((event: React.MouseEvent, node: any) => {
+    if (node.id.startsWith("more-")) {
+      const cat = node.id.replace("more-", "");
+      setExpandedCategories(prev => ({ ...prev, [cat]: true }));
+      setTimeout(() => {
+        fitView({ padding: 0.25, minZoom: 0.7, duration: 450 });
+      }, 150);
+      return;
+    }
+    if (node.id.startsWith("less-")) {
+      const cat = node.id.replace("less-", "");
+      setExpandedCategories(prev => ({ ...prev, [cat]: false }));
+      setTimeout(() => {
+        fitView({ padding: 0.25, minZoom: 0.7, duration: 450 });
+      }, 150);
+      return;
+    }
+
     setSelectedNodeId(node.id);
     // Smoothly center viewport on selected node
     setCenter(node.position.x + 50, node.position.y + 20, { zoom: 1.15, duration: 400 });
-  }, [setCenter]);
+  }, [setCenter, fitView]);
 
   const onPaneClick = useCallback(() => {
     setSelectedNodeId(null);
