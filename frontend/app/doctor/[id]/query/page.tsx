@@ -146,8 +146,41 @@ export default function DoctorQueryPage({ params }: { params: Promise<{ id: stri
         }
         if (gRes.ok) {
           const graph = await gRes.json();
-          const conds = graph.nodes.filter((n: any) => n.type === "disease").length;
-          const meds = graph.nodes.filter((n: any) => n.type === "medication").length;
+          let conds = 0;
+          let meds = 0;
+          const medKeywords = ["metformin", "lisinopril", "atorvastatin", "gabapentin", "insulin", "aspirin", "ibuprofen", "mg", "mcg", "ml", "tablet", "capsule", "pill"];
+          const diseaseKeywords = ["diabetes", "neuropathy", "hypertension", "gerd", "asthma", "hyperlipidemia", "retinopathy", "insufficiency", "failure", "infection", "cold", "flu", "pain", "cancer", "tumor", "stroke", "arthritis", "dermatitis"];
+
+          graph.nodes.forEach((node: any) => {
+            let type = node.type;
+            if (type === "concept") {
+              const labelLower = node.label.toLowerCase();
+              if (medKeywords.some(kw => labelLower.includes(kw))) {
+                type = "medication";
+              } else if (diseaseKeywords.some(kw => labelLower.includes(kw))) {
+                type = "disease";
+              } else {
+                const relEdges = graph.edges.filter((e: any) => e.source === node.id || e.target === node.id);
+                for (const edge of relEdges) {
+                  const rel = edge.label.toLowerCase();
+                  if (rel.includes("diagnosed") || rel.includes("complication") || rel.includes("complicates") || rel.includes("symptom")) {
+                    type = "disease";
+                    break;
+                  }
+                  if (rel.includes("prescribed") || rel.includes("treated") || rel.includes("treatment")) {
+                    type = "medication";
+                    break;
+                  }
+                }
+              }
+            }
+
+            if (type === "disease") {
+              conds++;
+            } else if (type === "medication") {
+              meds++;
+            }
+          });
           setStats(prev => ({ ...prev, conditions: conds, medications: meds }));
         }
       } catch (err) {
