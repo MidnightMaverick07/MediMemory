@@ -6,16 +6,18 @@ from app.cognee_service.client import cognee_cloud as cognee
 
 logger = logging.getLogger("cognee_service")
 
-async def remember_patient_profile(db: Session, patient_id: int):
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    if not patient:
-        logger.error("Patient ID %d not found for profile remembering", patient_id)
-        return
-        
-    dataset_name = f"patient_{patient_id}"
-    logger.info("Remembering patient profile for dataset %s", dataset_name)
-    
+async def remember_patient_profile(db_not_used: Session, patient_id: int):
+    from app.db.session import SessionLocal
+    db = SessionLocal()
     try:
+        patient = db.query(Patient).filter(Patient.id == patient_id).first()
+        if not patient:
+            logger.error("Patient ID %d not found for profile remembering", patient_id)
+            return
+            
+        dataset_name = f"patient_{patient_id}"
+        logger.info("Remembering patient profile for dataset %s", dataset_name)
+        
         # Load demographics JSON
         demographics = {}
         if patient.demographics:
@@ -62,10 +64,15 @@ async def remember_patient_profile(db: Session, patient_id: int):
         logger.info("Patient profile remembered and improved successfully for dataset %s", dataset_name)
     except Exception as e:
         logger.exception("Failed to remember patient profile for patient ID %d: %s", patient_id, e)
-        log = ActivityLog(
-            patient_id=patient_id,
-            event_type="improve",
-            details=f"Failed to index patient profile in memory graph: {str(e)}"
-        )
-        db.add(log)
-        db.commit()
+        try:
+            log = ActivityLog(
+                patient_id=patient_id,
+                event_type="improve",
+                details=f"Failed to index patient profile in memory graph: {str(e)}"
+            )
+            db.add(log)
+            db.commit()
+        except:
+            pass
+    finally:
+        db.close()

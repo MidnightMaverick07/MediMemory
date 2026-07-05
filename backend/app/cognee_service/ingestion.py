@@ -23,22 +23,24 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         logger.exception("Error extracting PDF text: %s", e)
         raise ValueError("Could not parse PDF file structure.")
 
-async def ingest_document(db: Session, doc_id: int):
-    doc = db.query(Document).filter(Document.id == doc_id).first()
-    if not doc:
-        logger.error("Document ID %d not found in database", doc_id)
-        return
-
-    doc.status = "processing"
-    db.commit()
-
-    from app.config import settings
-    if not settings.GEMINI_API_KEY:
-        raise ValueError(
-            "LLM API key is not configured. Please set the GEMINI_API_KEY in the backend .env file."
-        )
-
+async def ingest_document(db_not_used: Session, doc_id: int):
+    from app.db.session import SessionLocal
+    db = SessionLocal()
     try:
+        doc = db.query(Document).filter(Document.id == doc_id).first()
+        if not doc:
+            logger.error("Document ID %d not found in database", doc_id)
+            return
+
+        doc.status = "processing"
+        db.commit()
+
+        from app.config import settings
+        if not settings.GEMINI_API_KEY:
+            raise ValueError(
+                "LLM API key is not configured. Please set the GEMINI_API_KEY in the backend .env file."
+            )
+
         file_ext = os.path.splitext(doc.filename)[1].lower()
         ocr_used = False
 
@@ -108,15 +110,26 @@ async def ingest_document(db: Session, doc_id: int):
 
     except Exception as e:
         logger.exception("Ingestion failed for document ID %d: %s", doc_id, e)
-        doc.status = "failed"
-        doc.error_message = str(e)
-        db.commit()
+        try:
+            # Re-fetch document with local active session to update status
+            doc_retry = db.query(Document).filter(Document.id == doc_id).first()
+            if doc_retry:
+                doc_retry.status = "failed"
+                doc_retry.error_message = str(e)
+                db.commit()
+        except Exception as retry_err:
+            logger.error("Failed to set document status to failed: %s", retry_err)
 
         # Log activity
-        log = ActivityLog(
-            patient_id=doc.patient_id,
-            event_type="remember",
-            details=f"Failed to ingest report '{doc.filename}': {str(e)}"
-        )
-        db.add(log)
-        db.commit()
+        try:
+            log = ActivityLog(
+                patient_id=doc.patient_id if doc else 0,
+                event_type="remember",
+                details=f"Failed to ingest report: {str(e)}"
+            )
+            db.add(log)
+            db.commit()
+        except:
+            pass
+    finally:
+        db.close()
