@@ -4,7 +4,7 @@ import React, { use, useState, useEffect, useMemo, useCallback } from "react";
 import Header from "@/components/Header";
 import {
   Activity, Pill, FileText, Stethoscope, Heart,
-  ChevronRight, RefreshCw, ZoomIn, ZoomOut, Maximize2,
+  ChevronRight, RefreshCw, ZoomIn, ZoomOut, Maximize2, Minimize2,
   RotateCcw, X, ExternalLink, User, Hospital, AlertTriangle
 } from "lucide-react";
 import {
@@ -108,6 +108,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showAllEdges, setShowAllEdges] = useState(false);
   const [showLegend, setShowLegend] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
   const [edges, setEdgesState, onEdgesChange] = useEdgesState<any>([]);
@@ -325,6 +326,12 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
   const handleZoomIn = () => zoomIn({ duration: 300 });
   const handleZoomOut = () => zoomOut({ duration: 300 });
   const handleFit = () => fitView({ padding: 0.15, duration: 450 });
+  const handleToggleMaximize = () => {
+    setIsMaximized(prev => !prev);
+    setTimeout(() => {
+      fitView({ padding: 0.15, duration: 400 });
+    }, 150);
+  };
   const handleReset = () => {
     setSelectedNodeId(null);
     fitView({ padding: 0.15, duration: 450 });
@@ -343,10 +350,10 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
   /* ───────── RENDER ───────── */
   return (
     <div className="min-h-screen bg-[#060b18] text-slate-100 flex flex-col" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <Header currentPatientId={patientId} activePortal="doctor" activeTab="graph" />
+      {!isMaximized && <Header currentPatientId={patientId} activePortal="doctor" activeTab="graph" />}
 
       {/* ── patient stats bar ── */}
-      {patient && (
+      {patient && !isMaximized && (
         <div className="border-b border-slate-800/60 bg-[#0a1025]/80 backdrop-blur-md">
           <div className="max-w-[1440px] mx-auto px-6 py-3 flex items-center gap-6">
             <div className="flex items-center gap-3">
@@ -378,7 +385,8 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
       <main className="flex-1 flex overflow-hidden">
 
         {/* ── LEFT SIDEBAR ── */}
-        <aside className="w-[260px] min-w-[260px] border-r border-slate-800/50 bg-[#080e20]/60 overflow-y-auto px-4 py-5 flex flex-col gap-4 scrollbar-thin">
+        {!isMaximized && (
+          <aside className="w-[260px] min-w-[260px] border-r border-slate-800/50 bg-[#080e20]/60 overflow-y-auto px-4 py-5 flex flex-col gap-4 scrollbar-thin">
 
           {/* Active Conditions */}
           <SidebarCard title="Active Conditions" count={conditions.length} accent="#22d3ee">
@@ -432,6 +440,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
             </div>
           </div>
         </aside>
+      )}
 
         {/* ── CENTER GRAPH ── */}
         <div className="flex-1 flex flex-col bg-[#060b18] relative overflow-hidden">
@@ -493,7 +502,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
               {[
                 { icon: <ZoomIn className="w-3.5 h-3.5" />,      fn: handleZoomIn },
                 { icon: <ZoomOut className="w-3.5 h-3.5" />,     fn: handleZoomOut },
-                { icon: <Maximize2 className="w-3.5 h-3.5" />,   fn: handleFit },
+                { icon: isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />,   fn: handleToggleMaximize },
                 { icon: <RotateCcw className="w-3.5 h-3.5" />,   fn: handleReset },
               ].map((b, i) => (
                 <button key={i} onClick={b.fn}
@@ -522,7 +531,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
         </div>
 
         {/* ── RIGHT INSPECTOR ── */}
-        <aside className={`border-l border-slate-800/50 bg-[#080e20]/60 overflow-y-auto transition-all duration-300 flex flex-col ${selectedNode ? "w-[290px] min-w-[290px]" : "w-0 min-w-0"}`}>
+        <aside className={`border-l border-slate-800/50 bg-[#080e20]/60 overflow-y-auto transition-all duration-300 flex flex-col ${selectedNode && !isMaximized ? "w-[290px] min-w-[290px]" : "w-0 min-w-0"}`}>
           {selectedNode && (
             <div className="p-5 flex flex-col gap-4 animate-in slide-in-from-right-4 duration-200">
               {/* close */}
