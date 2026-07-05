@@ -9,17 +9,13 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: DATABASE_URL
-        value: sqlite:////data/app.db
+        value: sqlite:///./data/app.db
       - key: DATA_DIR
-        value: /data
+        value: ./data
       - key: COGNEE_API_KEY
         sync: false
       - key: COGNEE_BASE_URL
         value: https://api.cognee.ai
       - key: FRONTEND_URL
         sync: false
-    disk:
-      name: medimemory-data
-      mountPath: /data
-      sizeGB: 1
 
