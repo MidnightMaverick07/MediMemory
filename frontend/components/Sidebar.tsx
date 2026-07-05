@@ -134,7 +134,7 @@ export default function Sidebar({ currentPatientId, role, isOpenMobile, onCloseM
     >
       {/* Sidebar Header */}
       <div className="p-4 flex items-center justify-between border-b border-slate-850">
-        <Link href="/" className="flex items-center gap-3 group overflow-hidden">
+        <Link href="/patients" className="flex items-center gap-3 group overflow-hidden">
           <div className="p-2 bg-gradient-to-tr from-violet-600 to-indigo-600 rounded-xl shrink-0">
             <Brain className="w-5 h-5 text-white animate-pulse" />
           </div>

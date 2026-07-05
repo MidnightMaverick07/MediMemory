@@ -89,7 +89,7 @@ export default function Header({ currentPatientId, activePortal, activeTab }: He
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Logo and Brand */}
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/patients" className="flex items-center gap-3 group">
             <div className="p-2.5 bg-gradient-to-tr from-violet-600 to-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
               <Brain className="w-5 h-5 text-white animate-pulse" />
             </div>
@@ -108,7 +108,7 @@ export default function Header({ currentPatientId, activePortal, activeTab }: He
         <div className="flex flex-wrap items-center justify-center gap-4">
           {/* Back to Directory */}
           <Link
-            href="/"
+            href="/patients"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-semibold text-slate-300 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
