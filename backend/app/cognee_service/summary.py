@@ -201,9 +201,15 @@ async def generate_clinical_summary(db: Session, patient_id: int) -> str:
         if demographics_dict.get("blood_group"):
             physical.append(f"Blood Group: **{demographics_dict.get('blood_group')}**")
         if demographics_dict.get("height"):
-            physical.append(f"Height: {demographics_dict.get('height')} cm")
+            h_val = str(demographics_dict.get("height")).strip()
+            if not h_val.lower().endswith("cm"):
+                h_val += " cm"
+            physical.append(f"Height: {h_val}")
         if demographics_dict.get("weight"):
-            physical.append(f"Weight: {demographics_dict.get('weight')} kg")
+            w_val = str(demographics_dict.get("weight")).strip()
+            if not w_val.lower().endswith("kg"):
+                w_val += " kg"
+            physical.append(f"Weight: {w_val}")
         if physical:
             lines.append("- " + " | ".join(physical))
             

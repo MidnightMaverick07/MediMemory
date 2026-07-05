@@ -259,21 +259,47 @@ export default function DoctorDashboardPage({ params }: { params: Promise<{ id: 
   };
 
   const renderTextWithCitations = (text: string) => {
-    const regex = /\[([^\]]+)\]/g;
+    const citationRegex = /\[([^\]]+)\]/g;
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
     let match;
 
-    while ((match = regex.exec(text)) !== null) {
+    const renderBoldText = (subText: string): React.ReactNode[] => {
+      const boldRegex = /\*\*([^*]+)\*\*/g;
+      const subParts: React.ReactNode[] = [];
+      let lastIdx = 0;
+      let boldMatch;
+
+      while ((boldMatch = boldRegex.exec(subText)) !== null) {
+        const matchIdx = boldMatch.index;
+        if (matchIdx > lastIdx) {
+          subParts.push(subText.substring(lastIdx, matchIdx));
+        }
+        subParts.push(
+          <strong key={`bold-${matchIdx}`} className="font-bold text-white light:text-slate-900">
+            {boldMatch[1]}
+          </strong>
+        );
+        lastIdx = boldRegex.lastIndex;
+      }
+
+      if (lastIdx < subText.length) {
+        subParts.push(subText.substring(lastIdx));
+      }
+
+      return subParts;
+    };
+
+    while ((match = citationRegex.exec(text)) !== null) {
       const matchIndex = match.index;
       if (matchIndex > lastIndex) {
-        parts.push(text.substring(lastIndex, matchIndex));
+        parts.push(...renderBoldText(text.substring(lastIndex, matchIndex)));
       }
       
       const nodeName = match[1];
       parts.push(
         <Link
-          key={matchIndex}
+          key={`cit-${matchIndex}`}
           href={`/doctor/${patientId}/graph?highlight=${encodeURIComponent(nodeName)}`}
           className="inline-flex items-center gap-0.5 px-1.5 py-0.5 mx-0.5 rounded bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/35 hover:border-indigo-400 text-[10px] font-black text-indigo-300 transition-all select-none hover:shadow-[0_0_8px_rgba(99,102,241,0.4)]"
           title={`Find [${nodeName}] in Relationship Explorer`}
@@ -283,11 +309,11 @@ export default function DoctorDashboardPage({ params }: { params: Promise<{ id: 
         </Link>
       );
       
-      lastIndex = regex.lastIndex;
+      lastIndex = citationRegex.lastIndex;
     }
 
     if (lastIndex < text.length) {
-      parts.push(text.substring(lastIndex));
+      parts.push(...renderBoldText(text.substring(lastIndex)));
     }
 
     return parts.length > 0 ? parts : text;
