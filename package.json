@@ -1,0 +1,11 @@
+{
+  "name": "medimemory-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build"
+  },
+  "dependencies": {
+    "next": "16.2.9"
+  }
+}
