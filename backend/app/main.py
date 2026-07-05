@@ -9,12 +9,21 @@ from contextlib import asynccontextmanager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
 
+from app.seed.seed_direct import seed_data
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize SQLite database schema
     logger.info("Initializing SQL Database...")
     init_db()
     
+    # Auto-seed if database is empty (crucial for Render free tier restarts)
+    try:
+        logger.info("Checking database seed status...")
+        await seed_data()
+    except Exception as e:
+        logger.error(f"Error during database auto-seeding: {e}")
+        
     # Initialize Cognee configurations and fallback engines
     logger.info("Initializing Cognee service...")
     await init_cognee_service()
