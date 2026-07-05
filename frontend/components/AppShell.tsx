@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import TopHeader from "./TopHeader";
 
@@ -12,13 +12,25 @@ interface AppShellProps {
 
 export default function AppShell({ children, currentPatientId, role }: AppShellProps) {
   const [isOpenMobile, setIsOpenMobile] = useState(false);
+  const [activeRole, setActiveRole] = useState<"doctor" | "patient">(role);
+
+  useEffect(() => {
+    // Check search query parameters on the client side
+    const params = new URLSearchParams(window.location.search);
+    const queryRole = params.get("role");
+    if (queryRole === "doctor" || queryRole === "patient") {
+      setActiveRole(queryRole);
+    } else {
+      setActiveRole(role);
+    }
+  }, [role]);
 
   return (
     <div className="min-h-screen flex bg-[#060b18] light:bg-slate-50 text-slate-100 light:text-slate-900 overflow-hidden font-sans">
       {/* Persistent left collapsible sidebar */}
       <Sidebar 
         currentPatientId={currentPatientId} 
-        role={role} 
+        role={activeRole} 
         isOpenMobile={isOpenMobile} 
         onCloseMobile={() => setIsOpenMobile(false)} 
       />
@@ -28,7 +40,7 @@ export default function AppShell({ children, currentPatientId, role }: AppShellP
         {/* Compact Toolbar */}
         <TopHeader 
           currentPatientId={currentPatientId} 
-          role={role} 
+          role={activeRole} 
           onMenuClick={() => setIsOpenMobile(true)} 
         />
 

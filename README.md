@@ -1,56 +1,92 @@
-# Longitudinal Health Memory Platform (Cognee Cloud Migration)
+# MediMemory: Longitudinal Patient Health Memory Platform
 
-This monorepo contains a Next.js frontend and a FastAPI backend designed to process clinical records and construct a persistent longitudinal patient health memory graph using **Cognee Cloud**.
-
-## Architecture Overview
-
-```
-                                  +-----------------------+
-                                  |   Vercel Deployment   |
-                                  |   (Next.js Frontend)  |
-                                  +-----------+-----------+
-                                              |
-                                              | HTTPS REST API
-                                              v
-                                  +-----------+-----------+
-                                  |   Render Deployment   |
-                                  |   (FastAPI Backend)   |
-                                  +-----+-----------+-----+
-                                        |           |
-            SQLite/Postgres Database    |           | HTTPS REST API (X-Api-Key)
-         (Patient Profile/Metadata)     v           v
-                          +-------------+---+   +---+-------------+
-                          | Managed SQL DB  |   |  Cognee Cloud   |
-                          | (e.g. Supabase) |   | (Graph/Vector)  |
-                          +-----------------+   +-----------------+
-```
-
-The system works across three decoupled components:
-1.  **Frontend (Vercel)**: Serves the medical UI and handles file uploads, patient registry, timelines, and graph query forms.
-2.  **Backend (Render)**: Standardizes clinical OCR parsing, maps JSON entities, and orchestrates semantic recall and graph consolidation.
-3.  **Memory Layer (Cognee Cloud)**: A managed cloud backend that builds, indexes, and queries the clinical knowledge graph.
+MediMemory is an intelligent clinical platform that consolidates unstructured medical records (PDFs, scans, discharge summaries) into a unified, queryable **Longitudinal Patient Health Memory Graph** powered by **Cognee Cloud** and **Gemini Pro**.
 
 ---
 
-## Service Layout
+## 📌 The Problem
 
-*   [`/frontend`](./frontend): Next.js single-page application.
-*   [`/backend`](./backend): FastAPI service with database models and Cognee API orchestration.
+In modern healthcare, a patient's clinical history is scattered across different Electronic Health Record (EHR) systems, unstructured lab reports, and handwritten notes. 
+
+* **Clinical Fragmentation**: A doctor reviewing a patient's file often faces dozens of isolated PDF reports. Synthesizing this information chronologically under time constraints is prone to error.
+* **Hidden Connections**: Subtle, critical links—such as a past adverse reaction to a drug class or a progressive symptom trend across multiple consults—remain buried in raw text.
+* **Cognitive Load**: Clinicians lack a semantic search interface. They cannot ask natural language questions about a patient's entire history or view how medications and conditions map together dynamically.
+
+### The MediMemory Solution
+MediMemory parses raw medical text using Multi-Modal LLMs (Gemini Pro), standardizes clinical entities (diseases, drugs, procedures, labs), and feeds them into a semantic graph schema (Cognee Cloud). This creates a **persistent memory network** that matures with every new document uploaded, turning fragmented history into an interactive clinical graph.
 
 ---
 
-## Local Setup
+## ⚙️ System Architecture
 
-### 1. Backend Setup
-1. Navigate to the `backend` folder:
+The monorepo operates across three decoupled service layers:
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                         FRONTEND LAYER (Vercel)                        │
+│   ┌────────────────────────────────────────────────────────────────┐   │
+│   │                    Next.js 15+ SPA Client                      │   │
+│   │  • Doctor Portal (Graph Explorer, Ledgers, Ask AI Memory)      │   │
+│   │  • Patient Portal (Health Timeline, Evolution, PDF Uploads)    │   │
+│   └───────────────────────────────┬────────────────────────────────┘   │
+└───────────────────────────────────┼────────────────────────────────────┘
+                                    │ HTTPS REST API
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        SERVICES LAYER (Render)                         │
+│   ┌────────────────────────────────────────────────────────────────┐   │
+│   │                         FastAPI Server                         │   │
+│   │  • OCR Clinical Parsing / Extraction (Gemini Pro)              │   │
+│   │  • SQLite / PostgreSQL Patient Metadata Ledger                 │   │
+│   │  • Cognee Graph & Vector Engine Orchestration                  │   │
+│   └───────────────────────┬───────────────┬────────────────────────┘   │
+└───────────────────────────┼───────────────┼────────────────────────────┘
+                            │               │ HTTPS / Auth
+     Reads/Writes Profiles  │               │ (X-Api-Key)
+                            ▼               ▼
+                   ┌────────────────┐  ┌─────────────────────────┐
+                   │ Managed SQL DB │  │   COGNEE CLOUD ENGINE   │
+                   │ (Supabase/PG)  │  │  • Entity Linking       │
+                   │                │  │  • Graph DB Indexing    │
+                   │                │  │  • Vector DB Embeddings │
+                   └────────────────┘  └─────────────────────────┘
+```
+
+---
+
+## ✨ Core Capabilities
+
+### 1. Interactive Relationship Explorer
+* Renders a live, interactive 2D graph of the patient's entire medical record using force-directed graph layouts.
+* Color-coded semantic nodes represent **Patients**, **Diseases/Conditions**, **Medications**, **Allergies**, **Labs**, and **Surgeries**.
+* Path highlighting filters nodes based on categorical parameters (e.g. highlights only medications or only surgeries).
+
+### 2. Clinical Memory Timeline & Evolution
+* Renders a chronological history of a patient's medical consults, diagnoses, and treatments.
+* Summarizes key semantic highlights from clinical notes with reference documents attached.
+
+### 3. Dedicated Medications & Conditions Ledgers (Doctor Mode)
+* **Medications Ledger**: Chronological log of all prescribed medications. Links each medication back to its indicated disease and the doctor who prescribed it, including direct citations to the reference PDF report.
+* **Conditions Ledger**: Master index of active and chronic diagnoses, tracking date of onset, treatment mapping (medications), and clinical providers.
+
+### 4. Natural Language Queries (Ask AI Memory)
+* Allows clinicians to query a patient's memory graph using semantic RAG.
+* Ask questions like: *"Which medication did the patient start after their diabetes diagnosis?"* or *"Does the patient have any recorded reactions to Penicillin?"*
+
+---
+
+## 🛠️ Local Development Setup
+
+### 1. Backend Service (FastAPI)
+1. Navigate to the backend directory:
    ```bash
    cd backend
    ```
-2. Create a `.env` file using the template:
+2. Create your local environment configuration:
    ```bash
    cp .env.example .env
    ```
-3. Set your API credentials:
+3. Update `.env` with your API credentials:
    ```ini
    GEMINI_API_KEY=your_gemini_api_key
    COGNEE_API_KEY=your_cognee_cloud_api_key
@@ -58,67 +94,67 @@ The system works across three decoupled components:
    DATABASE_URL=sqlite:///./data/app.db
    FRONTEND_URL=http://localhost:3000
    ```
-4. Set up a Python 3.11 virtual environment and install dependencies:
+4. Create a Python virtual environment and install dependencies:
    ```bash
    python -m venv .venv
-   source .venv/bin/activate # or .venv\Scripts\activate on Windows
+   # Windows:
+   .venv\Scripts\activate
+   # Mac/Linux:
+   source .venv/bin/activate
+
    pip install -r requirements.txt
    ```
-5. Start the backend:
+5. Spin up the local API server:
    ```bash
    uvicorn app.main:app --reload
    ```
 
-### 2. Frontend Setup
-1. Navigate to the `frontend` folder:
+### 2. Frontend Web App (Next.js)
+1. Navigate to the frontend directory:
    ```bash
-   cd frontend
+   cd ../frontend
    ```
-2. Create a `.env.local` file using the template:
+2. Create your environment configuration:
    ```bash
    cp .env.example .env.local
    ```
-3. Set your backend URL:
+3. Confirm the local API URL endpoint:
    ```ini
    NEXT_PUBLIC_API_URL=http://localhost:8000
    ```
-4. Install dependencies and start:
+4. Install package dependencies and start the development server:
    ```bash
    npm install
    npm run dev
    ```
+5. Open your browser to `http://localhost:3000` to interact with the platform.
 
 ---
 
-## Production Deployment Instructions
+## 🚀 Production Deployment Instructions
 
-### Step 1: Deploy Cognee Cloud
-1. Log in to your [Cognee Cloud Console](https://console.cognee.ai).
-2. Generate a new API Key.
-3. Note your API Key and your custom Tenant URL (if any).
+### Step 1: Initialize Cognee Cloud
+1. Register/Log in to the [Cognee Cloud Console](https://console.cognee.ai).
+2. Generate an API Key under your settings panel.
 
-### Step 2: Deploy Backend to Render
-1. Push the project repository to GitHub.
-2. Log in to [Render](https://render.com) and create a new **Web Service**.
-3. Point it to your repository.
-4. Configure the service settings:
+### Step 2: Deploy the FastAPI Backend to Render
+1. Create a new **Web Service** on Render and connect your repository fork.
+2. Set the following configuration parameters:
    * **Root Directory**: `backend`
    * **Build Command**: `pip install -r requirements.txt`
    * **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-5. Under Environment Variables, add:
+3. Add the required Environment Variables:
    * `GEMINI_API_KEY` = `<Your Gemini API Key>`
    * `COGNEE_API_KEY` = `<Your Cognee Cloud API Key>`
-   * `COGNEE_BASE_URL` = `https://api.cognee.ai` (or your custom tenant URL)
-   * `DATABASE_URL` = `<A persistent database connection string, e.g. Supabase or Neon PostgreSQL>`
-   * `FRONTEND_URL` = `https://your-app.vercel.app` (your Vercel frontend URL)
-6. Trigger the deployment. Take note of the generated Web Service URL (e.g. `https://your-backend.onrender.com`).
+   * `COGNEE_BASE_URL` = `https://api.cognee.ai`
+   * `DATABASE_URL` = `<A persistent PostgreSQL connection string>`
+   * `FRONTEND_URL` = `https://your-frontend.vercel.app`
 
-### Step 3: Deploy Frontend to Vercel
-1. Log in to [Vercel](https://vercel.com) and click **Add New Project**.
-2. Select your monorepo repository.
-3. Configure the project settings:
+### Step 3: Deploy the Next.js Frontend to Vercel
+1. Create a new project in Vercel and link your repository fork.
+2. Set the following configuration parameters:
    * **Framework Preset**: `Next.js`
    * **Root Directory**: `frontend`
-4. Under Environment Variables, add:
-   * `NEXT_PUBLIC_API_URL` = `https://your-backend.onrender.com` (your Render backend URL)
-5. Click **Deploy**.
+3. Add the environment variable:
+   * `NEXT_PUBLIC_API_URL` = `https://your-backend.onrender.com` (Render Web Service URL)
+4. Deploy the project.

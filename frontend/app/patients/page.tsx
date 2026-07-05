@@ -15,7 +15,8 @@ import {
   ClipboardList,
   Heart,
   Sun,
-  Moon
+  Moon,
+  Trash2
 } from "lucide-react";
 
 interface Patient {
@@ -93,6 +94,25 @@ export default function PatientDirectory() {
     }
   };
 
+  const handleDeletePatient = async (patientId: number, patientName: string) => {
+    if (!confirm(`Are you sure you want to delete patient "${patientName}" and completely forget their clinical memory graph? This action is irreversible.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/patients/${patientId}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        fetchPatients();
+      } else {
+        const err = await res.json();
+        alert(err.detail || "Failed to delete patient.");
+      }
+    } catch (err: any) {
+      alert(err.message || "An error occurred while deleting the patient.");
+    }
+  };
+
   const handleCreatePatient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -108,8 +128,8 @@ export default function PatientDirectory() {
           gender,
           demographics: {
             blood_group: bloodGroup,
-            height,
-            weight,
+            height: height.replace(/\s*cm/gi, "").trim(),
+            weight: weight.replace(/\s*kg/gi, "").trim(),
             emergency_contact: emergencyContact
           }
         })
@@ -223,6 +243,17 @@ export default function PatientDirectory() {
               >
                 <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-2xl pointer-events-none rounded-full" />
                 
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeletePatient(p.id, p.name);
+                  }}
+                  className="absolute top-4 right-4 text-slate-500 hover:text-rose-500 hover:scale-105 transition-all p-1.5 z-10"
+                  title="Delete Patient & Forget Clinical Memory"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-gradient-to-tr from-violet-600/10 to-indigo-600/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
                     <User className="w-5 h-5" />
@@ -247,11 +278,11 @@ export default function PatientDirectory() {
                   </div>
                   <div>
                     <span className="text-slate-500 block uppercase tracking-wider font-bold">Height</span>
-                    <span className="font-semibold text-slate-200 block mt-0.5">{p.demographics?.height ? `${p.demographics.height} cm` : "—"}</span>
+                    <span className="font-semibold text-slate-200 block mt-0.5">{p.demographics?.height ? `${String(p.demographics.height).replace(/\s*cm/gi, "")} cm` : "—"}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 block uppercase tracking-wider font-bold">Weight</span>
-                    <span className="font-semibold text-slate-200 block mt-0.5">{p.demographics?.weight ? `${p.demographics.weight} kg` : "—"}</span>
+                    <span className="font-semibold text-slate-200 block mt-0.5">{p.demographics?.weight ? `${String(p.demographics.weight).replace(/\s*kg/gi, "")} kg` : "—"}</span>
                   </div>
                 </div>
 

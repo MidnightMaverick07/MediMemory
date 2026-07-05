@@ -113,8 +113,8 @@ export default function PatientProfilePage({ params }: { params: Promise<{ id: s
       const updatedDemographics = {
         ...patient.demographics,
         blood_group: editBloodGroup,
-        height: editHeight,
-        weight: editWeight,
+        height: editHeight.replace(/\s*cm/gi, "").trim(),
+        weight: editWeight.replace(/\s*kg/gi, "").trim(),
         emergency_contact: editEmergencyContact
       };
 
@@ -224,7 +224,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ id: s
               </div>
               <div className="bg-slate-950/40 border border-slate-800/80 p-3 rounded-2xl">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Height</span>
-                <span className="text-sm font-semibold text-white mt-1 block">{patient.demographics?.height ? `${patient.demographics.height} cm` : "Not Set"}</span>
+                <span className="text-sm font-semibold text-white mt-1 block">{patient.demographics?.height ? `${String(patient.demographics.height).replace(/\s*cm/gi, "")} cm` : "Not Set"}</span>
               </div>
             </div>
 
@@ -232,7 +232,7 @@ export default function PatientProfilePage({ params }: { params: Promise<{ id: s
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-slate-950/40 border border-slate-800/80 p-3.5 rounded-2xl flex flex-col justify-between">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Weight</span>
-                <span className="text-sm font-semibold text-white mt-1 block">{patient.demographics?.weight ? `${patient.demographics.weight} kg` : "Not Set"}</span>
+                <span className="text-sm font-semibold text-white mt-1 block">{patient.demographics?.weight ? `${String(patient.demographics.weight).replace(/\s*kg/gi, "")} kg` : "Not Set"}</span>
               </div>
               <div className="bg-slate-950/40 border border-slate-800/80 p-3.5 rounded-2xl flex flex-col justify-between">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Emergency Contact</span>

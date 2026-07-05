@@ -43,29 +43,29 @@ export const navigationConfig: {
     {
       label: "Timeline",
       iconName: "Calendar",
-      route: (id: number) => `/patient/${id}/timeline`,
+      route: (id: number) => `/patient/${id}/timeline?role=doctor`,
       activeMatch: (path: string, id: number) => path === `/patient/${id}/timeline`,
       section: "Patient Records",
     },
     {
       label: "Reports",
       iconName: "FileText",
-      route: (id: number) => `/patient/${id}/upload`,
+      route: (id: number) => `/patient/${id}/upload?role=doctor`,
       activeMatch: (path: string, id: number) => path === `/patient/${id}/upload`,
       section: "Patient Records",
     },
     {
       label: "Medications",
       iconName: "Pill",
-      route: (id: number) => `/doctor/${id}/graph?highlight=medication`,
-      activeMatch: (path: string, id: number) => path.includes(`/doctor/${id}/graph`) && path.includes("highlight=medication"),
+      route: (id: number) => `/doctor/${id}/medications`,
+      activeMatch: (path: string, id: number) => path === `/doctor/${id}/medications`,
       section: "Patient Records",
     },
     {
       label: "Conditions",
       iconName: "Heart",
-      route: (id: number) => `/doctor/${id}/graph?highlight=disease`,
-      activeMatch: (path: string, id: number) => path.includes(`/doctor/${id}/graph`) && path.includes("highlight=disease"),
+      route: (id: number) => `/doctor/${id}/conditions`,
+      activeMatch: (path: string, id: number) => path === `/doctor/${id}/conditions`,
       section: "Patient Records",
     },
     {
@@ -85,7 +85,7 @@ export const navigationConfig: {
     {
       label: "All Records",
       iconName: "FolderOpen",
-      route: (id: number) => `/patient/${id}/timeline`,
+      route: (id: number) => `/patient/${id}/timeline?role=doctor`,
       activeMatch: (path: string, id: number) => path === `/patient/${id}/timeline`,
       section: "Patient Records",
     },
@@ -100,7 +100,7 @@ export const navigationConfig: {
     {
       label: "Upload Report",
       iconName: "Upload",
-      route: (id: number) => `/patient/${id}/upload`,
+      route: (id: number) => `/patient/${id}/upload?role=doctor`,
       activeMatch: (path: string, id: number) => path === `/patient/${id}/upload`,
       section: "Actions",
     }

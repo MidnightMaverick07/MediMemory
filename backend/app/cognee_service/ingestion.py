@@ -100,13 +100,20 @@ async def ingest_document(db_not_used: Session, doc_id: int):
         db.add(log)
         db.commit()
 
-        # Trigger ontological improvement automatically after ingestion
-        from .enrichment import enrich_patient_memory
-        await enrich_patient_memory(db, doc.patient_id)
+        # Extract timeline events using Gemini LLM — run FIRST since enrichment
+        # polls Cognee Cloud for up to 90 seconds and would delay timeline creation
+        try:
+            from .timeline_extractor import extract_timeline_events
+            await extract_timeline_events(db, doc.id)
+        except Exception as timeline_err:
+            logger.exception("Timeline extraction failed for document ID %d: %s", doc_id, timeline_err)
 
-        # Extract timeline events using Gemini LLM
-        from .timeline_extractor import extract_timeline_events
-        await extract_timeline_events(db, doc.id)
+        # Trigger ontological improvement automatically after ingestion
+        try:
+            from .enrichment import enrich_patient_memory
+            await enrich_patient_memory(db, doc.patient_id)
+        except Exception as enrich_err:
+            logger.exception("Enrichment failed for document ID %d: %s", doc_id, enrich_err)
 
     except Exception as e:
         logger.exception("Ingestion failed for document ID %d: %s", doc_id, e)

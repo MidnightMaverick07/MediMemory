@@ -24,7 +24,8 @@ import {
   ShieldAlert,
   Sparkles,
   Clock,
-  UserCheck
+  UserCheck,
+  Trash2
 } from "lucide-react";
 
 interface Patient {
@@ -160,6 +161,25 @@ export default function DoctorDashboardPage({ params }: { params: Promise<{ id: 
       ]);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleDeleteReport = async (docId: number, docFilename: string) => {
+    if (!confirm(`Are you sure you want to delete report "${docFilename}" and completely forget its clinical information? This action is irreversible.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/patients/${patientId}/documents/${docId}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.detail || "Failed to delete document.");
+      }
+    } catch (err: any) {
+      alert(err.message || "An error occurred while deleting the document.");
     }
   };
 
@@ -376,10 +396,10 @@ export default function DoctorDashboardPage({ params }: { params: Promise<{ id: 
                   </span>
                 )}
                 {patient.demographics?.height && (
-                  <span>Height: <strong className="text-slate-200">{patient.demographics.height} cm</strong></span>
+                  <span>Height: <strong className="text-slate-200">{String(patient.demographics.height).replace(/\s*cm/gi, "")} cm</strong></span>
                 )}
                 {patient.demographics?.weight && (
-                  <span>Weight: <strong className="text-slate-200">{patient.demographics.weight} kg</strong></span>
+                  <span>Weight: <strong className="text-slate-200">{String(patient.demographics.weight).replace(/\s*kg/gi, "")} kg</strong></span>
                 )}
                 {patient.demographics?.emergency_contact && (
                   <span className="hidden sm:inline border-l border-slate-850 pl-4 text-slate-400">
@@ -621,15 +641,24 @@ export default function DoctorDashboardPage({ params }: { params: Promise<{ id: 
                         </div>
                       </div>
                       
-                      <span className={`text-[9px] font-bold px-2 py-0.5 border rounded uppercase ${
-                        doc.status === "completed" 
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : doc.status === "processing"
-                          ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 animate-pulse"
-                          : "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                      }`}>
-                        {doc.status}
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <span className={`text-[9px] font-bold px-2 py-0.5 border rounded uppercase ${
+                          doc.status === "completed" 
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                            : doc.status === "processing"
+                            ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 animate-pulse"
+                            : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                        }`}>
+                          {doc.status}
+                        </span>
+                        <button
+                          onClick={() => handleDeleteReport(doc.id, doc.filename)}
+                          className="text-slate-500 hover:text-rose-450 hover:scale-105 transition-all p-1"
+                          title="Delete Report & Forget Memory"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
