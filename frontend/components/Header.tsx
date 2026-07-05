@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brain, User, Activity, ToggleLeft, ToggleRight, ArrowLeft } from "lucide-react";
+import { Brain, User, Activity, ToggleLeft, ToggleRight, ArrowLeft, Sun, Moon } from "lucide-react";
 
 interface Patient {
   id: number;
@@ -24,6 +24,28 @@ export default function Header({ currentPatientId, activePortal, activeTab }: He
   const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    const saved = (localStorage.getItem("theme") as "light" | "dark") || "dark";
+    setTheme(saved);
+    if (saved === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    if (next === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  };
 
   useEffect(() => {
     async function fetchPatients() {
@@ -92,6 +114,15 @@ export default function Header({ currentPatientId, activePortal, activeTab }: He
             <ArrowLeft className="w-3.5 h-3.5" />
             Directory
           </Link>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-slate-300 hover:text-white transition-colors"
+            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
 
           {/* Patient Selector */}
           <div className="flex items-center gap-2">

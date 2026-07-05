@@ -13,7 +13,9 @@ import {
   Plus, 
   ArrowRight,
   ClipboardList,
-  Heart
+  Heart,
+  Sun,
+  Moon
 } from "lucide-react";
 
 interface Patient {
@@ -37,6 +39,28 @@ export default function PatientDirectory() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    const saved = (localStorage.getItem("theme") as "light" | "dark") || "dark";
+    setTheme(saved);
+    if (saved === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    if (next === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  };
 
   // New Patient Form State
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -128,13 +152,24 @@ export default function PatientDirectory() {
             </div>
           </div>
 
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20"
-          >
-            <UserPlus className="w-4 h-4" />
-            Register New Patient
-          </button>
+          <div className="flex items-center gap-3.5">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-3 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-2xl text-slate-300 hover:text-white transition-all shadow-md"
+              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
+            </button>
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20"
+            >
+              <UserPlus className="w-4 h-4" />
+              Register New Patient
+            </button>
+          </div>
         </div>
       </div>
 

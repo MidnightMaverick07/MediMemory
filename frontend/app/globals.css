@@ -1,26 +1,164 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060b18;
+  --foreground: #f8fafc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LIGHT MODE STYLING SYSTEM
+   Applies high-fidelity slate/indigo light-mode overrides when the 'light'
+   class is present on the document root.
+   ───────────────────────────────────────────────────────────────────────── */
+.light {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+.light body {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Background overrides */
+.light .bg-slate-950,
+.light .bg-\[\#060b18\],
+.light .bg-\[\#0a1025\]\/80 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.light .bg-slate-900,
+.light .bg-slate-900\/80,
+.light .bg-slate-900\/30,
+.light .bg-\[\#080e20\]\/60,
+.light .bg-\[\#0a1025\]\/60,
+.light .bg-\[\#0d1530\]\/90,
+.light .bg-\[\#0d1530\]\/95 {
+  background-color: #ffffff !important;
+}
+
+.light .bg-slate-950\/40,
+.light .bg-slate-900\/10,
+.light .bg-slate-900\/40,
+.light .bg-slate-50,
+.light .bg-[#f8fafc] {
+  background-color: #f1f5f9 !important;
+}
+
+/* Border overrides */
+.light .border-slate-800,
+.light .border-slate-850,
+.light .border-slate-800\/60,
+.light .border-slate-800\/50,
+.light .border-slate-800\/40,
+.light .border-slate-800\/30,
+.light .border-slate-700,
+.light .border-slate-750,
+.light .border-slate-700\/80,
+.light .border-slate-700\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Text overrides */
+.light .text-slate-100,
+.light .text-white {
+  color: #0f172a !important;
+}
+
+.light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Inputs & Form Controls */
+.light select,
+.light input,
+.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Buttons */
+.light .bg-slate-800,
+.light .bg-slate-800\/30,
+.light .bg-slate-800\/50 {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light .bg-slate-800:hover,
+.light .bg-slate-800\/50:hover,
+.light .hover\:bg-slate-850:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.light .hover\:bg-slate-800:hover,
+.light .hover\:bg-slate-800\/70:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Header Specifics */
+.light header {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+.light header h1 {
+  color: #4f46e5 !important; /* indigo-600 logo */
+}
+
+/* Graph Canvas */
+.light .react-flow__pane {
+  background-color: #f1f5f9 !important;
+}
+
+.light .react-flow__node-custom {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light .react-flow__handle {
+  background-color: #64748b !important;
+}
+
+.light .react-flow__edge-path {
+  stroke: #94a3b8 !important;
+}
+
+/* Timeline specific overrides */
+.light .before\:bg-slate-800::before {
+  background-color: #cbd5e1 !important;
+}
+
