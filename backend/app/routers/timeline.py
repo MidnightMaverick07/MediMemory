@@ -54,6 +54,20 @@ class EvolutionResponse(BaseModel):
 
 @router.get("/timeline", response_model=List[TimelineEventResponse])
 async def get_patient_timeline(patient_id: int, db: Session = Depends(get_db)):
+    try:
+        docs = db.query(Document).filter(
+            Document.patient_id == patient_id,
+            Document.status == "completed"
+        ).all()
+        for doc in docs:
+            exists = db.query(TimelineEvent).filter(TimelineEvent.document_id == doc.id).first()
+            if not exists:
+                from app.cognee_service.timeline_extractor import extract_timeline_events
+                await extract_timeline_events(db, doc.id)
+    except Exception as he:
+        import logging
+        logging.getLogger("uvicorn").error("Timeline self-healing failed for patient %d: %s", patient_id, he)
+
     events = db.query(TimelineEvent).filter(TimelineEvent.patient_id == patient_id).order_by(TimelineEvent.date.desc()).all()
     
     results = []

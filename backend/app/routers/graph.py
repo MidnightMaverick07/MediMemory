@@ -218,5 +218,19 @@ def build_graph_data(patient_id: int, db: Session, limit_to_doc_ids: Optional[Li
     return GraphResponse(nodes=node_list, edges=edge_list)
 
 @router.get("", response_model=GraphResponse)
-def get_patient_graph(patient_id: int, db: Session = Depends(get_db)):
+async def get_patient_graph(patient_id: int, db: Session = Depends(get_db)):
+    try:
+        docs = db.query(Document).filter(
+            Document.patient_id == patient_id,
+            Document.status == "completed"
+        ).all()
+        for doc in docs:
+            exists = db.query(TimelineEvent).filter(TimelineEvent.document_id == doc.id).first()
+            if not exists:
+                from app.cognee_service.timeline_extractor import extract_timeline_events
+                await extract_timeline_events(db, doc.id)
+    except Exception as he:
+        import logging
+        logging.getLogger("uvicorn").error("Graph self-healing failed for patient %d: %s", patient_id, he)
+
     return build_graph_data(patient_id, db)
