@@ -196,9 +196,15 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
           <>
             {/* Evolution Statistics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden group">
+              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative group/tooltip">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 blur-xl pointer-events-none rounded-full" />
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">New Concepts</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block flex items-center gap-1.5 select-none">
+                  New Concepts
+                  <HelpCircle className="w-3.5 h-3.5 text-slate-600 hover:text-emerald-400 cursor-help transition-colors" />
+                  <div className="absolute bottom-full mb-2 left-0 hidden group-hover/tooltip:block bg-slate-950 border border-slate-800 text-slate-300 text-[10px] p-2.5 rounded-xl shadow-2xl w-56 z-50 normal-case tracking-normal font-medium leading-relaxed">
+                    Directly parsed by Cognee as new unique entities (e.g. diagnoses, lab values, clinics) not previously found in the graph.
+                  </div>
+                </span>
                 <span className="text-2xl font-black text-emerald-400 block mt-2 flex items-center gap-1">
                   +{newNodesCount}
                   <span className="text-xs text-slate-400 font-normal">nodes</span>
@@ -206,9 +212,15 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
                 <span className="text-[9px] text-slate-500 font-medium block mt-1">E.g., new diagnoses, lab values</span>
               </div>
 
-              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden group">
+              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative group/tooltip">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 blur-xl pointer-events-none rounded-full" />
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Consolidated Concepts</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block flex items-center gap-1.5 select-none">
+                  Consolidated Concepts
+                  <HelpCircle className="w-3.5 h-3.5 text-slate-600 hover:text-indigo-400 cursor-help transition-colors" />
+                  <div className="absolute bottom-full mb-2 left-0 hidden group-hover/tooltip:block bg-slate-950 border border-slate-800 text-slate-300 text-[10px] p-2.5 rounded-xl shadow-2xl w-56 z-50 normal-case tracking-normal font-medium leading-relaxed">
+                    Cognee's identity resolution/deduplication engine merged these references into existing concepts to maintain a clean semantic record.
+                  </div>
+                </span>
                 <span className="text-2xl font-black text-indigo-400 block mt-2 flex items-center gap-1">
                   {mergedNodesCount}
                   <span className="text-xs text-slate-400 font-normal">merged</span>
@@ -216,9 +228,15 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
                 <span className="text-[9px] text-slate-500 font-medium block mt-1">Enriched existing memory concepts</span>
               </div>
 
-              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden group">
+              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative group/tooltip">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-violet-500/5 blur-xl pointer-events-none rounded-full" />
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">New Connections</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block flex items-center gap-1.5 select-none">
+                  New Connections
+                  <HelpCircle className="w-3.5 h-3.5 text-slate-600 hover:text-violet-400 cursor-help transition-colors" />
+                  <div className="absolute bottom-full mb-2 left-0 hidden group-hover/tooltip:block bg-slate-950 border border-slate-800 text-slate-300 text-[10px] p-2.5 rounded-xl shadow-2xl w-56 z-50 normal-case tracking-normal font-medium leading-relaxed">
+                    Semantic links (edges) built between nodes mapping new clinical relationships (e.g. DIAGNOSED_WITH, PRESCRIBED).
+                  </div>
+                </span>
                 <span className="text-2xl font-black text-violet-400 block mt-2 flex items-center gap-1">
                   +{newEdgesCount}
                   <span className="text-xs text-slate-400 font-normal">links</span>
@@ -226,9 +244,15 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
                 <span className="text-[9px] text-slate-500 font-medium block mt-1">Direct semantic connections built</span>
               </div>
 
-              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative overflow-hidden group">
+              <div className="bg-slate-900/35 border border-slate-850 rounded-2xl p-4 backdrop-blur-sm relative group/tooltip">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-sky-500/5 blur-xl pointer-events-none rounded-full" />
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Timeline Updates</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block flex items-center gap-1.5 select-none">
+                  Timeline Updates
+                  <HelpCircle className="w-3.5 h-3.5 text-slate-600 hover:text-sky-400 cursor-help transition-colors" />
+                  <div className="absolute bottom-full mb-2 left-0 hidden group-hover/tooltip:block bg-slate-950 border border-slate-800 text-slate-300 text-[10px] p-2.5 rounded-xl shadow-2xl w-56 z-50 normal-case tracking-normal font-medium leading-relaxed">
+                    Chronological medical events extracted from reports and added to the patient's Care Timeline feed.
+                  </div>
+                </span>
                 <span className="text-2xl font-black text-sky-400 block mt-2 flex items-center gap-1">
                   +{timelineCount}
                   <span className="text-xs text-slate-400 font-normal">events</span>
@@ -241,12 +265,18 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* SNAPSHOT BEFORE */}
-              <div className="bg-slate-900/30 border border-slate-850 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[340px]">
+              <div className="bg-slate-900/30 border border-slate-850 rounded-3xl p-6 relative flex flex-col justify-between min-h-[340px]">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-slate-800/10 blur-3xl pointer-events-none rounded-full" />
                 
                 <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Before Last Upload</span>
+                  <div className="flex items-center justify-between relative group/tooltip">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1.5 select-none">
+                      Before Last Upload
+                      <HelpCircle className="w-3.5 h-3.5 text-slate-600 hover:text-slate-400 cursor-help transition-colors" />
+                    </span>
+                    <div className="absolute bottom-full mb-2 left-0 hidden group-hover/tooltip:block bg-slate-950 border border-slate-800 text-slate-350 text-[10px] p-2 rounded-xl shadow-2xl w-52 z-50 normal-case tracking-normal font-medium leading-relaxed">
+                      Snapshot of the patient's knowledge graph counts before indexing the latest clinical document.
+                    </div>
                     <span className="px-2 py-0.5 bg-slate-800 text-slate-400 rounded-md text-[9px] font-bold border border-slate-700/60 uppercase">
                       Snapshot T-1
                     </span>
@@ -287,12 +317,18 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
               </div>
 
               {/* SNAPSHOT AFTER */}
-              <div className="bg-slate-900/30 border border-slate-850 rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[340px] shadow-indigo-500/5 shadow-md">
+              <div className="bg-slate-900/30 border border-slate-850 rounded-3xl p-6 relative flex flex-col justify-between min-h-[340px] shadow-indigo-500/5 shadow-md">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/5 blur-3xl pointer-events-none rounded-full" />
                 
                 <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">After Ingestion (Refined)</span>
+                  <div className="flex items-center justify-between relative group/tooltip">
+                    <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider flex items-center gap-1.5 select-none">
+                      After Ingestion (Refined)
+                      <HelpCircle className="w-3.5 h-3.5 text-indigo-500/70 hover:text-indigo-400 cursor-help transition-colors" />
+                    </span>
+                    <div className="absolute bottom-full mb-2 left-0 hidden group-hover/tooltip:block bg-slate-950 border border-slate-800 text-slate-350 text-[10px] p-2.5 rounded-xl shadow-2xl w-52 z-50 normal-case tracking-normal font-medium leading-relaxed">
+                      Current size of the patient's graph showing growth after parsing, entity extraction, and relationship building via Cognee Cloud.
+                    </div>
                     <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-300 rounded-md text-[9px] font-bold border border-indigo-500/20 uppercase animate-pulse">
                       Snapshot Current
                     </span>

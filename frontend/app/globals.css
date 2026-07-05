@@ -360,4 +360,18 @@ body {
   color: #475569 !important;
 }
 
+/* Ensure all interactive elements show the hand cursor */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[role="button"] {
+  cursor: pointer !important;
+}
+.cursor-pointer,
+.cursor-pointer * {
+  cursor: pointer !important;
+}
+
 

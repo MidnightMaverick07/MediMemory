@@ -45,17 +45,38 @@ const catOf = (t: string) => CAT[t] || defaultCat;
 const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
 /* ── Custom Node Component ── */
+/* ── Custom Node Component ── */
 const CustomNode = ({ data }: { data: any }) => {
-  const { label, type, isPatient, isSelected, isDimmed } = data;
+  const { label, type, isPatient, isSelected, isDimmed, isHeader, isMore } = data;
   const cat = catOf(type);
+  
+  if (isHeader) {
+    return (
+      <div className="px-3 py-1.5 bg-slate-900/90 border border-slate-800/80 text-[10px] font-black tracking-widest uppercase rounded-xl select-none text-center shadow-lg"
+           style={{ color: cat.color, borderColor: cat.border }}>
+        {label}
+      </div>
+    );
+  }
+
+  if (isMore) {
+    return (
+      <div className={`w-10 h-10 rounded-full flex flex-col items-center justify-center border-2 bg-slate-950/90 font-bold transition-all duration-300 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
+           style={{ borderColor: cat.color, color: cat.color }}>
+        <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
+        <span className="text-[10px] font-black leading-none">{label}</span>
+        <span className="text-[7.5px] font-bold uppercase tracking-wider mt-0.5 opacity-80">more</span>
+        <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
+      </div>
+    );
+  }
   
   if (isPatient) {
     return (
-      <div className={`reactflow-node-patient w-16 h-16 rounded-full flex flex-col items-center justify-center border-2 bg-[#090e20] transition-all duration-300 relative ${isSelected ? 'border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.6)] scale-110' : 'border-violet-500/50'} ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
-           style={{ animation: isSelected ? "pulse-glow 2s infinite" : undefined }}>
+      <div className={`w-16 h-16 rounded-full flex flex-col items-center justify-center border-2 bg-gradient-to-tr from-blue-700 to-indigo-650 transition-all duration-300 relative ${isSelected ? 'border-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.65)] scale-110' : 'border-indigo-500/80'} ${isDimmed ? 'opacity-30' : 'opacity-100'}`}>
         <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
-        <span className="text-white text-base font-black">{initials(label)}</span>
-        <span className="absolute top-18 text-xs font-bold text-slate-200 whitespace-nowrap bg-slate-950/90 px-2 py-0.5 rounded-md border border-slate-800 shadow-xl">
+        <span className="text-white text-base font-black leading-none">{initials(label)}</span>
+        <span className="absolute top-18 text-[11px] font-bold text-white whitespace-nowrap leading-none select-none">
           {label}
         </span>
         <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
@@ -63,23 +84,82 @@ const CustomNode = ({ data }: { data: any }) => {
     );
   }
 
+  // Circular with side text (Medications & Lab Results)
+  if (type === "medication" || type === "allergy" || type === "concept" || type === "doctor" || type === "hospital") {
+    let title = label;
+    let subtitle = cat.label;
+    
+    // Formatting values beautifully if they contain details
+    if (label.includes(" - ")) {
+      const parts = label.split(" - ");
+      title = parts[0];
+      subtitle = parts[1];
+    } else if (label.toLowerCase().includes("hb1ac") || label.toLowerCase().includes("hba1c")) {
+      title = "HbA1c";
+      subtitle = label.replace(/hba1c\s*/gi, "");
+    } else if (label.toLowerCase().includes("cholesterol")) {
+      title = "Cholesterol (LDL)";
+      subtitle = label.replace(/cholesterol\s*(l(dl)?)?\s*/gi, "");
+    } else if (label.toLowerCase().includes("triglycerides")) {
+      title = "Triglycerides";
+      subtitle = label.replace(/triglycerides\s*/gi, "");
+    }
+    
+    return (
+      <div className={`flex items-center gap-2.5 bg-transparent border-0 transition-all duration-300 ${isSelected ? 'scale-105' : ''}`}
+           style={{ opacity: isDimmed ? 0.3 : 1 }}>
+        <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
+        
+        {/* Circular icon badge */}
+        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shrink-0 bg-slate-950 transition-all`}
+             style={{
+               borderColor: isSelected ? cat.color : cat.border,
+               color: cat.color,
+               boxShadow: isSelected ? `0 0 12px ${cat.color}55` : undefined
+             }}>
+          {cat.icon}
+        </div>
+        
+        {/* Floating text to the right */}
+        <div className="flex flex-col min-w-[80px] max-w-[170px] select-none text-left">
+          <span className="text-[11px] font-bold text-white leading-tight truncate">{title}</span>
+          <span className="text-[8.5px] font-medium text-slate-400 mt-0.5 leading-none truncate">{subtitle}</span>
+        </div>
+        
+        <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
+      </div>
+    );
+  }
+
+  // Circular with inner text (Conditions, Procedures, Reports)
+  let title = label;
+  let subtitle = "";
+  if (type === "surgery" && label.includes(" (")) {
+    const idx = label.indexOf(" (");
+    title = label.substring(0, idx);
+    subtitle = label.substring(idx + 2, label.length - 1);
+  } else if (type === "report" && label.includes(" ")) {
+    const idx = label.lastIndexOf(" ");
+    title = label.substring(0, idx);
+    subtitle = label.substring(idx + 1);
+  }
+
   return (
-    <div className={`reactflow-node-concept px-3.5 py-2 rounded-xl border flex items-center gap-2.5 bg-[#080d1f]/95 hover:bg-[#0a1129]/100 transition-all duration-300 ${isSelected ? 'scale-105 shadow-xl border-opacity-100' : 'border-opacity-50'}`}
+    <div className={`w-20 h-20 rounded-full border-2 bg-slate-950/90 hover:bg-[#070c1e] flex flex-col items-center justify-center p-2 text-center transition-all duration-300 ${isSelected ? 'scale-105' : ''}`}
          style={{
            borderColor: isSelected ? cat.color : cat.border,
            opacity: isDimmed ? 0.3 : 1,
-           boxShadow: isSelected ? `0 0 15px ${cat.color}44` : undefined,
+           boxShadow: isSelected ? `0 0 15px ${cat.color}44` : undefined
          }}>
       <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
-      <div className="p-1.5 rounded-lg shrink-0" style={{ background: cat.bg, color: cat.color }}>
-        {cat.icon}
-      </div>
-      <div className="flex flex-col min-w-[85px] max-w-[155px]">
-        <span className="text-[11px] font-bold text-slate-100 truncate leading-tight">{label}</span>
-        <span className="text-[8px] font-bold uppercase tracking-wider mt-0.5" style={{ color: cat.color }}>
-          {cat.label}
+      <span className="text-[9.5px] font-black text-white leading-tight select-none truncate max-w-full">
+        {title}
+      </span>
+      {subtitle && (
+        <span className="text-[8px] font-medium text-slate-400 mt-0.5 leading-none select-none truncate max-w-full">
+          {subtitle}
         </span>
-      </div>
+      )}
       <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
     </div>
   );
@@ -155,65 +235,152 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
     const result: any[] = [];
     
     // Patient at center
+    const X_C = 650;
+    const Y_C = 300;
+    
     result.push({
       id: patientNode.id,
       type: "custom",
-      position: { x: 650, y: 300 },
+      position: { x: X_C - 32, y: Y_C - 32 }, // offset by half card size (32px) to center it
       data: { ...patientNode, isPatient: true },
     });
 
     const otherNodes = rawNodes.filter(n => n.id !== patientNode.id);
 
-    // Group other nodes by their column mapping
-    const col0: RawNode[] = []; // Concepts (Far Left)
-    const col1: RawNode[] = []; // Medications & Allergies (Mid Left)
-    const col2: RawNode[] = []; // Center Trunk (Timeline Events below patient)
-    const col3: RawNode[] = []; // Conditions (Mid Right)
-    const col4: RawNode[] = []; // Procedures & Reports (Right)
-    const col5: RawNode[] = []; // Doctors & Hospitals (Far Right)
+    // Group other nodes by category
+    const conditions = otherNodes.filter(n => n.type === "disease");
+    const medications = otherNodes.filter(n => n.type === "medication" || n.type === "allergy");
+    const procedures = otherNodes.filter(n => n.type === "surgery");
+    const reports = otherNodes.filter(n => n.type === "report");
+    const labs = otherNodes.filter(n => n.type === "concept" || n.type === "doctor" || n.type === "hospital" || n.type === "timeline_event");
 
-    otherNodes.forEach(node => {
-      if (node.type === "concept") col0.push(node);
-      else if (node.type === "medication" || node.type === "allergy") col1.push(node);
-      else if (node.type === "timeline_event") col2.push(node);
-      else if (node.type === "disease") col3.push(node);
-      else if (node.type === "surgery" || node.type === "report") col4.push(node);
-      else if (node.type === "doctor" || node.type === "hospital") col5.push(node);
-      else col0.push(node); // default fallback
-    });
+    const LIMIT = 3;
 
-    // Helper to position a column overlap-free
-    const positionColumn = (nodes: RawNode[], x: number, centerY: number = 300) => {
-      const N = nodes.length;
-      nodes.forEach((node, i) => {
-        // 75px vertical separation ensures 100% overlap-free alignment
-        const y = centerY + (i - (N - 1) / 2) * 75;
-        result.push({
-          id: node.id,
-          type: "custom",
-          position: { x, y },
-          data: { ...node, isPatient: false },
-        });
+    // Helper to add group header
+    const addHeader = (id: string, label: string, x: number, y: number, type: string) => {
+      result.push({
+        id: `header-${id}`,
+        type: "custom",
+        position: { x: x - 50, y: y - 12 }, // offset header box size (100x24) to center it
+        data: { label, isHeader: true, type },
       });
     };
 
-    // Position columns with generous horizontal gaps
-    positionColumn(col0, 60);
-    positionColumn(col1, 340);
-    positionColumn(col3, 960);
-    positionColumn(col4, 1240);
-    positionColumn(col5, 1520);
-
-    // Position Timeline events below the patient node vertically
-    col2.forEach((node, i) => {
-      const y = 430 + i * 75;
+    // Helper to add +X more node
+    const addMore = (id: string, count: number, x: number, y: number, type: string) => {
       result.push({
-        id: node.id,
+        id: `more-${id}`,
         type: "custom",
-        position: { x: 650, y },
-        data: { ...node, isPatient: false },
+        position: { x: x - 20, y: y - 20 }, // offset more circle size (40x40) to center it
+        data: { label: `+${count}`, isMore: true, type },
       });
-    });
+    };
+
+    // 1. TOP SPOKE: Conditions (Up to 3 nodes)
+    if (conditions.length > 0) {
+      addHeader("conditions", "Conditions", X_C, Y_C - 230, "disease");
+      const visible = conditions.slice(0, LIMIT);
+      const N = visible.length;
+      visible.forEach((node, i) => {
+        let x = X_C;
+        let y = Y_C - 150;
+        if (N === 2) {
+          x = X_C - 70 + i * 140;
+          y = Y_C - 140;
+        } else if (N === 3) {
+          if (i === 0) { x = X_C - 120; y = Y_C - 130; }
+          else if (i === 1) { x = X_C; y = Y_C - 170; }
+          else if (i === 2) { x = X_C + 120; y = Y_C - 130; }
+        }
+        result.push({
+          id: node.id,
+          type: "custom",
+          position: { x: x - 40, y: y - 40 }, // offset by half card size (40px)
+          data: { ...node },
+        });
+      });
+      if (conditions.length > LIMIT) {
+        addMore("conditions", conditions.length - LIMIT, X_C + 180, Y_C - 90, "disease");
+      }
+    }
+
+    // 2. LEFT SPOKE: Medications (Up to 3 nodes, vertical list)
+    if (medications.length > 0) {
+      addHeader("medications", "Medications", X_C - 270, Y_C - 150, "medication");
+      const visible = medications.slice(0, LIMIT);
+      visible.forEach((node, i) => {
+        result.push({
+          id: node.id,
+          type: "custom",
+          position: { x: X_C - 290, y: Y_C - 115 + i * 60 }, // aligns circles centered at X_C-270
+          data: { ...node },
+        });
+      });
+      if (medications.length > LIMIT) {
+        addMore("medications", medications.length - LIMIT, X_C - 270, Y_C - 95 + LIMIT * 60, "medication");
+      }
+    }
+
+    // 3. RIGHT SPOKE: Lab Results (Up to 3 nodes, vertical list)
+    if (labs.length > 0) {
+      addHeader("labs", "Lab Results", X_C + 270, Y_C - 150, "concept");
+      const visible = labs.slice(0, LIMIT);
+      visible.forEach((node, i) => {
+        result.push({
+          id: node.id,
+          type: "custom",
+          position: { x: X_C + 250, y: Y_C - 115 + i * 60 }, // aligns circles centered at X_C+270
+          data: { ...node },
+        });
+      });
+      if (labs.length > LIMIT) {
+        addMore("labs", labs.length - LIMIT, X_C + 270, Y_C - 95 + LIMIT * 60, "concept");
+      }
+    }
+
+    // 4. BOTTOM LEFT SPOKE: Procedures (Up to 2 nodes, horizontal)
+    if (procedures.length > 0) {
+      addHeader("procedures", "Procedures", X_C - 130, Y_C + 110, "surgery");
+      const visible = procedures.slice(0, 2);
+      const N = visible.length;
+      visible.forEach((node, i) => {
+        let x = X_C - 130;
+        if (N === 2) {
+          x = X_C - 190 + i * 120;
+        }
+        result.push({
+          id: node.id,
+          type: "custom",
+          position: { x: x - 40, y: Y_C + 175 - 40 },
+          data: { ...node },
+        });
+      });
+      if (procedures.length > 2) {
+        addMore("procedures", procedures.length - 2, X_C - 130 + 100, Y_C + 245, "surgery");
+      }
+    }
+
+    // 5. BOTTOM RIGHT SPOKE: Reports (Up to 2 nodes, horizontal)
+    if (reports.length > 0) {
+      addHeader("reports", "Reports", X_C + 130, Y_C + 110, "report");
+      const visible = reports.slice(0, 2);
+      const N = visible.length;
+      visible.forEach((node, i) => {
+        let x = X_C + 130;
+        if (N === 2) {
+          x = X_C + 70 + i * 120;
+        }
+        result.push({
+          id: node.id,
+          type: "custom",
+          position: { x: x - 40, y: Y_C + 175 - 40 },
+          data: { ...node },
+        });
+      });
+      if (reports.length > 2) {
+        addMore("reports", reports.length - 2, X_C + 130 + 100, Y_C + 245, "report");
+      }
+    }
 
     return result;
   }, [rawNodes, patientNode]);
@@ -228,9 +395,17 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
     return set;
   }, [selectedNodeId, rawEdges]);
 
+  const visibleNodeIds = useMemo(() => {
+    return new Set(positioned.map(n => n.id));
+  }, [positioned]);
+
   /* ── dynamic edges mapping ── */
   const flowEdges = useMemo(() => {
-    return rawEdges.map((e, idx) => {
+    const resultEdges: any[] = [];
+    
+    // Add edges to the standard nodes
+    const activeEdges = rawEdges.filter(e => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target));
+    activeEdges.forEach((e, idx) => {
       const isSelected = selectedNodeId && (e.source === selectedNodeId || e.target === selectedNodeId);
       const isDimmed = selectedNodeId !== null && !isSelected;
       
@@ -240,7 +415,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
       const targetNode = rawNodes.find(n => n.id === (e.source === selectedNodeId ? e.target : e.source));
       const targetCat = catOf(targetNode?.type || "");
       
-      return {
+      resultEdges.push({
         id: `edge-${idx}`,
         source: e.source,
         target: e.target,
@@ -258,9 +433,77 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
           fontSize: "8px",
           fontWeight: "600",
         },
-      };
+      });
     });
-  }, [rawEdges, selectedNodeId, showAllEdges, patientNode, rawNodes]);
+
+    // Group nodes for more placeholders calculations
+    const otherNodes = rawNodes.filter(n => n.id !== patientNode?.id);
+    const conditions = otherNodes.filter(n => n.type === "disease");
+    const medications = otherNodes.filter(n => n.type === "medication" || n.type === "allergy");
+    const procedures = otherNodes.filter(n => n.type === "surgery");
+    const reports = otherNodes.filter(n => n.type === "report");
+    const labs = otherNodes.filter(n => n.type === "concept" || n.type === "doctor" || n.type === "hospital" || n.type === "timeline_event");
+
+    const LIMIT = 3;
+
+    // Add dashed edges to the "more" placeholder nodes
+    if (medications.length > LIMIT && patientNode) {
+      resultEdges.push({
+        id: "edge-more-meds",
+        source: patientNode.id,
+        target: "more-medications",
+        label: "prescribed",
+        animated: false,
+        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+      });
+    }
+    if (labs.length > LIMIT && patientNode) {
+      resultEdges.push({
+        id: "edge-more-labs",
+        source: patientNode.id,
+        target: "more-labs",
+        label: "has result",
+        animated: false,
+        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+      });
+    }
+    if (conditions.length > LIMIT && patientNode) {
+      resultEdges.push({
+        id: "edge-more-conditions",
+        source: patientNode.id,
+        target: "more-conditions",
+        label: "diagnosed with",
+        animated: false,
+        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+      });
+    }
+    if (procedures.length > 2 && patientNode) {
+      resultEdges.push({
+        id: "edge-more-procedures",
+        source: patientNode.id,
+        target: "more-procedures",
+        label: "underwent",
+        animated: false,
+        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+      });
+    }
+    if (reports.length > 2 && patientNode) {
+      resultEdges.push({
+        id: "edge-more-reports",
+        source: patientNode.id,
+        target: "more-reports",
+        label: "recorded in",
+        animated: false,
+        style: { stroke: "#475569", strokeDasharray: "4 4", strokeWidth: 1.5, opacity: selectedNodeId ? 0.08 : 0.45 },
+        labelStyle: { fill: "#64748b", fontSize: 8, fontWeight: 700 }
+      });
+    }
+    return resultEdges;
+  }, [rawEdges, visibleNodeIds, showAllEdges, selectedNodeId, patientNode, rawNodes]);
 
   /* ── Sync positions and states into React Flow nodes/edges ── */
   useEffect(() => {
@@ -280,6 +523,19 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
   useEffect(() => {
     setEdgesState(flowEdges);
   }, [flowEdges, setEdgesState]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isMaximized) {
+        setIsMaximized(false);
+        setTimeout(() => {
+          fitView({ padding: 0.2, minZoom: 0.7, duration: 400 });
+        }, 150);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isMaximized, fitView]);
 
   /* ── Auto fit view on load & handle highlight query param ── */
   useEffect(() => {
@@ -361,7 +617,14 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
 
   /* ───────── RENDER ───────── */
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div 
+      className={`flex flex-col overflow-hidden ${
+        isMaximized 
+          ? "fixed inset-0 z-50 bg-[#060b18] w-screen h-screen" 
+          : "flex-1 min-h-0"
+      }`} 
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
 
       {/* ── patient stats bar ── */}
       {patient && !isMaximized && (
