@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
+from app.cognee_service.deletion import rebuild_patient_graph
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.db.models import Document, Patient
@@ -121,11 +122,25 @@ def get_document(patient_id: int, doc_id: int, db: Session = Depends(get_db)):
     return _doc_to_response(doc)
 
 @router.delete("/{doc_id}")
-async def delete_document(patient_id: int, doc_id: int, db: Session = Depends(get_db)):
+async def delete_document(patient_id: int, doc_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         await delete_patient_document(db, patient_id, doc_id)
-        return {"status": "success", "message": f"Document {doc_id} deleted and memory graph updated."}
+        # Rebuild graph in background so the HTTP response returns immediately
+        background_tasks.add_task(rebuild_patient_graph_background, patient_id)
+        return {"status": "success", "message": f"Document {doc_id} deleted. Memory graph rebuilding in background."}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+
+async def rebuild_patient_graph_background(patient_id: int):
+    """Background wrapper that creates its own DB session for the graph rebuild."""
+    from app.db.session import SessionLocal
+    db = SessionLocal()
+    try:
+        await rebuild_patient_graph(db, patient_id, "Document deleted, rebuilding graph.")
+    except Exception as e:
+        import logging
+        logging.getLogger("cognee_service").error("Background graph rebuild failed for patient %d: %s", patient_id, e)
+    finally:
+        db.close()

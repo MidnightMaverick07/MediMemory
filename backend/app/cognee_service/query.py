@@ -278,7 +278,8 @@ async def query_patient_memory(db: Session, patient_id: int, question: str, role
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            api_key=settings.GEMINI_API_KEY
+            api_key=settings.GEMINI_API_KEY,
+            num_retries=3
         )
         content = response.choices[0].message.content.strip()
         

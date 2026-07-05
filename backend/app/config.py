@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     
     LLM_PROVIDER: str = "gemini"
-    LLM_MODEL: str = "gemini/gemini-2.0-flash-lite"
+    LLM_MODEL: str = "gemini/gemini-2.5-flash"
     
     EMBEDDING_PROVIDER: str = "fastembed"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"

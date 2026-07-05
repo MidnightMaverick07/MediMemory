@@ -20,12 +20,18 @@ async def delete_patient_document(db: Session, patient_id: int, doc_id: int):
         except Exception as e:
             logger.error("Could not delete file from disk: %s", e)
             
-    # Delete from DB
+    # Delete from DB (cascade removes timeline events)
     db.delete(doc)
     db.commit()
     
-    # Rebuild patient memory graph to completely forget the document
-    await rebuild_patient_graph(db, patient_id, f"Deleted document '{filename}' from memory.")
+    # Log activity
+    log = ActivityLog(
+        patient_id=patient_id,
+        event_type="forget",
+        details=f"Deleted document '{filename}' from vault. Memory graph rebuild queued."
+    )
+    db.add(log)
+    db.commit()
 
 async def delete_patient_dataset(db: Session, patient_id: int):
     dataset_name = f"patient_{patient_id}"
