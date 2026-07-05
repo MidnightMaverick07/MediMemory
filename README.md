@@ -4,12 +4,12 @@ MediMemory is an intelligent clinical platform that consolidates unstructured me
 
 ---
 
-## 📌 The Problem
+## The Problem
 
 In modern healthcare, a patient's clinical history is scattered across different Electronic Health Record (EHR) systems, unstructured lab reports, and handwritten notes. 
 
 * **Clinical Fragmentation**: A doctor reviewing a patient's file often faces dozens of isolated PDF reports. Synthesizing this information chronologically under time constraints is prone to error.
-* **Hidden Connections**: Subtle, critical links—such as a past adverse reaction to a drug class or a progressive symptom trend across multiple consults—remain buried in raw text.
+* **Hidden Connections**: Subtle, critical links, such as a past adverse reaction to a drug class or a progressive symptom trend across multiple consults, remain buried in raw text.
 * **Cognitive Load**: Clinicians lack a semantic search interface. They cannot ask natural language questions about a patient's entire history or view how medications and conditions map together dynamically.
 
 ### The MediMemory Solution
@@ -17,7 +17,7 @@ MediMemory parses raw medical text using Multi-Modal LLMs (Gemini Pro), standard
 
 ---
 
-## ⚙️ System Architecture
+## System Architecture
 
 The monorepo operates across three decoupled service layers:
 
@@ -54,7 +54,7 @@ The monorepo operates across three decoupled service layers:
 
 ---
 
-## ✨ Core Capabilities
+## Core Capabilities
 
 ### 1. Interactive Relationship Explorer
 * Renders a live, interactive 2D graph of the patient's entire medical record using force-directed graph layouts.
@@ -75,7 +75,7 @@ The monorepo operates across three decoupled service layers:
 
 ---
 
-## 🛠️ Local Development Setup
+## Local Development Setup
 
 ### 1. Backend Service (FastAPI)
 1. Navigate to the backend directory:
@@ -131,7 +131,7 @@ The monorepo operates across three decoupled service layers:
 
 ---
 
-## 🚀 Production Deployment Instructions
+## Production Deployment Instructions
 
 ### Step 1: Initialize Cognee Cloud
 1. Register/Log in to the [Cognee Cloud Console](https://console.cognee.ai).
@@ -158,3 +158,14 @@ The monorepo operates across three decoupled service layers:
 3. Add the environment variable:
    * `NEXT_PUBLIC_API_URL` = `https://your-backend.onrender.com` (Render Web Service URL)
 4. Deploy the project.
+
+---
+
+## AI Assistance Disclosure
+
+This project was built with the help of AI assistants (Antigravity) for:
+- Debugging and refining backend/frontend code
+- UI polish and refactoring suggestions
+- Drafting documentation and blog content
+
+All architecture decisions, feature design, and core implementation were done by the project author. AI tools were used as a coding aid, not as the primary builder.
