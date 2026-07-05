@@ -294,7 +294,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
       
       if (!highlighted) {
         setTimeout(() => {
-          fitView({ padding: 0.15, duration: 500 });
+          fitView({ padding: 0.25, minZoom: 0.7, duration: 500 });
         }, 150);
       }
     }
@@ -323,22 +323,22 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
     setLoading(true);
     await fetchGraphData();
     setTimeout(() => {
-      fitView({ padding: 0.15, duration: 400 });
+      fitView({ padding: 0.2, minZoom: 0.7, duration: 400 });
     }, 100);
   };
 
   const handleZoomIn = () => zoomIn({ duration: 300 });
   const handleZoomOut = () => zoomOut({ duration: 300 });
-  const handleFit = () => fitView({ padding: 0.15, duration: 450 });
+  const handleFit = () => fitView({ padding: 0.2, minZoom: 0.7, duration: 450 });
   const handleToggleMaximize = () => {
     setIsMaximized(prev => !prev);
     setTimeout(() => {
-      fitView({ padding: 0.15, duration: 400 });
+      fitView({ padding: 0.2, minZoom: 0.7, duration: 400 });
     }, 150);
   };
   const handleReset = () => {
     setSelectedNodeId(null);
-    fitView({ padding: 0.15, duration: 450 });
+    fitView({ padding: 0.2, minZoom: 0.7, duration: 450 });
   };
 
   /* ── Sidebar data ── */
