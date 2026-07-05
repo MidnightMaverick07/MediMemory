@@ -92,10 +92,12 @@ export default function Sidebar({ currentPatientId, role, isOpenMobile, onCloseM
         key={item.label}
         href={targetRoute}
         aria-current={isActive ? "page" : undefined}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all group relative duration-200 ${
+        className={`flex items-center rounded-xl text-xs font-bold transition-all group relative duration-200 ${
+          isExpanded ? "w-full py-1.5 px-3 gap-2.5" : "w-10 h-10 justify-center gap-0 px-0"
+        } ${
           isActive 
-            ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/15" 
-            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 light:hover:text-slate-900 light:hover:bg-slate-100"
+            ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/15 sidebar-link-active" 
+            : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 light:hover:text-slate-900 light:hover:bg-slate-100 sidebar-link-inactive"
         }`}
       >
         <IconComponent className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-105 ${isActive ? "text-white" : "text-slate-400 group-hover:text-indigo-400"}`} />
@@ -124,8 +126,8 @@ export default function Sidebar({ currentPatientId, role, isOpenMobile, onCloseM
       ref={sidebarRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`fixed top-0 bottom-0 left-0 bg-[#080d1f] border-r border-slate-850 z-40 flex flex-col justify-between transition-all duration-300 ease-out shadow-2xl ${
-        isExpanded ? "w-[240px]" : "w-[68px]"
+      className={`fixed top-0 bottom-0 left-0 bg-[#080d1f] border-r border-slate-850 z-40 flex flex-col justify-between transition-all duration-300 ease-out shadow-2xl overflow-x-hidden ${
+        isExpanded ? "w-[210px]" : "w-[68px]"
       } ${
         isOpenMobile ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       }`}
@@ -137,7 +139,7 @@ export default function Sidebar({ currentPatientId, role, isOpenMobile, onCloseM
             <Brain className="w-5 h-5 text-white animate-pulse" />
           </div>
           <div className={`transition-all duration-300 ${isExpanded ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none w-0"}`}>
-            <h1 className="text-sm font-black text-white leading-none">MediMemory</h1>
+            <h1 className="text-sm font-black text-white leading-none sidebar-logo-text">MediMemory</h1>
             <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider block mt-0.5">Clinical Graph</span>
           </div>
         </Link>
@@ -149,7 +151,7 @@ export default function Sidebar({ currentPatientId, role, isOpenMobile, onCloseM
       </div>
 
       {/* Navigation Body */}
-      <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-4 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto py-3 px-3.5 flex flex-col gap-3 scrollbar-none">
         {role === "doctor" ? (
           // Grouped sidebar format for Doctor View
           Object.entries(groupedItems).map(([sectionName, sectionItems]) => (
@@ -175,8 +177,8 @@ export default function Sidebar({ currentPatientId, role, isOpenMobile, onCloseM
         {/* Toggle Portal Button */}
         <button
           onClick={handleTogglePortal}
-          className={`flex items-center gap-2.5 p-2 bg-slate-900 border border-slate-800 text-indigo-400 hover:text-indigo-300 rounded-xl text-xs font-bold transition-all overflow-hidden ${
-            isExpanded ? "justify-start px-3" : "justify-center"
+          className={`flex items-center bg-slate-900 border border-slate-800 text-indigo-400 hover:text-indigo-300 rounded-xl text-xs font-bold transition-all overflow-hidden ${
+            isExpanded ? "justify-start px-3 py-2 gap-2.5 w-full" : "w-10 h-10 justify-center p-0 gap-0"
           }`}
           title={role === "doctor" ? "Switch to Patient View" : "Switch to Doctor View"}
         >
@@ -196,7 +198,9 @@ export default function Sidebar({ currentPatientId, role, isOpenMobile, onCloseM
           {isExpanded && (
             <div className="flex flex-col min-w-0 transition-opacity duration-300">
               <span className="text-xs font-black text-white truncate">{patientName || `Patient #${currentPatientId}`}</span>
-              <span className="text-[9px] text-slate-500 font-bold truncate uppercase">{role === "doctor" ? "Doctor Mode" : "Patient Mode"}</span>
+              <span className="text-[10px] text-indigo-400 font-bold tracking-wider truncate uppercase mt-0.5 sidebar-user-role">
+                {role === "doctor" ? "Doctor Mode" : "Patient Mode"}
+              </span>
             </div>
           )}
         </div>

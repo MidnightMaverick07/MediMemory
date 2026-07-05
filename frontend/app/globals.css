@@ -281,3 +281,83 @@ body {
   filter: brightness(0.8) contrast(1.15) !important;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   CUSTOM SIDEBAR LIGHT MODE OVERRIDES & SCROLLBAR UTILITIES
+   ───────────────────────────────────────────────────────────────────────── */
+   
+/* Hide scrollbars completely */
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-none {
+  -ms-overflow-style: none !important;  /* IE/Edge */
+  scrollbar-width: none !important;     /* Firefox */
+}
+
+/* Light mode sidebar background & borders */
+.light [class*="bg-[#080d1f]"] {
+  background-color: #ffffff !important;
+}
+.light [class*="bg-[#070b1a]"] {
+  background-color: #f8fafc !important;
+  border-top-color: #e2e8f0 !important;
+}
+.light .border-slate-850 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Logo contrast in light mode sidebar */
+.light .sidebar-logo-text {
+  color: #0f172a !important; /* Rich dark navy */
+}
+
+/* Active links in sidebar (Always Indigo with White Text) */
+.light .sidebar-link-active {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+.light .sidebar-link-active svg {
+  color: #ffffff !important;
+}
+
+/* Inactive links in sidebar (Transparent bg, slate text, slate hover) */
+.light .sidebar-link-inactive {
+  background-color: transparent !important;
+  color: #475569 !important;
+}
+.light .sidebar-link-inactive svg {
+  color: #64748b !important;
+}
+.light .sidebar-link-inactive:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+.light .sidebar-link-inactive:hover svg {
+  color: #4f46e5 !important;
+}
+
+/* Switch Portal Button in Light Mode Sidebar */
+.light [class*="bg-slate-900"].border-slate-800 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #4f46e5 !important;
+}
+.light [class*="bg-slate-900"].border-slate-800:hover {
+  background-color: #e2e8f0 !important;
+  color: #3730a3 !important;
+}
+
+/* User Profile Text and Role colors in Light Mode Sidebar */
+.light .sidebar-user-role {
+  color: #4f46e5 !important; /* Legible Indigo for Mode */
+}
+.light .text-white.truncate {
+  color: #0f172a !important; /* Dark text for Patient Name */
+}
+.light .bg-slate-800.border-slate-700.shrink-0 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+
