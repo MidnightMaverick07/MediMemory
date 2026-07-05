@@ -154,56 +154,64 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
     
     const result: any[] = [];
     
-    // Patient at center (450, 300)
+    // Patient at center
     result.push({
       id: patientNode.id,
       type: "custom",
-      position: { x: 450, y: 300 },
+      position: { x: 650, y: 300 },
       data: { ...patientNode, isPatient: true },
     });
 
     const otherNodes = rawNodes.filter(n => n.id !== patientNode.id);
-    const categories = Array.from(new Set(otherNodes.map(n => n.type)));
-    
-    categories.forEach((cat, catIdx) => {
-      const catNodes = otherNodes.filter(n => n.type === cat);
-      const N = catNodes.length;
-      
-      let baseAngle = (catIdx * (2 * Math.PI)) / Math.max(categories.length, 1);
-      
-      // Fine-tuned quadrant mappings for beautiful layout
-      if (cat === "disease") baseAngle = -Math.PI / 2; // conditions -> Top
-      else if (cat === "medication") baseAngle = Math.PI; // medications -> Left
-      else if (cat === "surgery") baseAngle = (3 * Math.PI) / 4; // surgeries -> Bottom-Left
-      else if (cat === "concept") baseAngle = -(3 * Math.PI) / 4; // concepts -> Top-Left
-      else if (cat === "timeline_event") baseAngle = Math.PI / 2; // timeline events -> Bottom
-      else if (cat === "report") baseAngle = Math.PI / 4; // reports -> Bottom-Right
-      else if (cat === "allergy") baseAngle = -Math.PI / 4; // allergies -> Top-Right
-      else if (cat === "doctor") baseAngle = -Math.PI / 8; // doctors -> Right
-      else if (cat === "hospital") baseAngle = Math.PI / 16; // hospitals -> Right-Bottom
-      
-      // Wider angular spread for large node lists to prevent crowding
-      const angleSpread = N > 1 ? Math.min(Math.PI / 2.2, (N - 1) * (0.35 - Math.min(0.15, N * 0.008))) : 0;
-      
-      catNodes.forEach((node, i) => {
-        let angle = baseAngle;
-        if (N > 1) {
-          angle = baseAngle - angleSpread / 2 + (i * angleSpread) / (N - 1);
-        }
-        
-        // Stagger radii in 3 tiers to fully avoid overlap
-        const radius = 240 + (i % 3) * 120;
-        
-        // Stretch layout horizontally (ellipse scaling * 1.55) to align with rectangular node card aspect ratio
-        const x = 450 + radius * Math.cos(angle) * 1.55 - 75; // center offset correction
-        const y = 300 + radius * Math.sin(angle) * 0.95 - 25;
-        
+
+    // Group other nodes by their column mapping
+    const col0: RawNode[] = []; // Concepts (Far Left)
+    const col1: RawNode[] = []; // Medications & Allergies (Mid Left)
+    const col2: RawNode[] = []; // Center Trunk (Timeline Events below patient)
+    const col3: RawNode[] = []; // Conditions (Mid Right)
+    const col4: RawNode[] = []; // Procedures & Reports (Right)
+    const col5: RawNode[] = []; // Doctors & Hospitals (Far Right)
+
+    otherNodes.forEach(node => {
+      if (node.type === "concept") col0.push(node);
+      else if (node.type === "medication" || node.type === "allergy") col1.push(node);
+      else if (node.type === "timeline_event") col2.push(node);
+      else if (node.type === "disease") col3.push(node);
+      else if (node.type === "surgery" || node.type === "report") col4.push(node);
+      else if (node.type === "doctor" || node.type === "hospital") col5.push(node);
+      else col0.push(node); // default fallback
+    });
+
+    // Helper to position a column overlap-free
+    const positionColumn = (nodes: RawNode[], x: number, centerY: number = 300) => {
+      const N = nodes.length;
+      nodes.forEach((node, i) => {
+        // 75px vertical separation ensures 100% overlap-free alignment
+        const y = centerY + (i - (N - 1) / 2) * 75;
         result.push({
           id: node.id,
           type: "custom",
           position: { x, y },
           data: { ...node, isPatient: false },
         });
+      });
+    };
+
+    // Position columns with generous horizontal gaps
+    positionColumn(col0, 60);
+    positionColumn(col1, 340);
+    positionColumn(col3, 960);
+    positionColumn(col4, 1240);
+    positionColumn(col5, 1520);
+
+    // Position Timeline events below the patient node vertically
+    col2.forEach((node, i) => {
+      const y = 430 + i * 75;
+      result.push({
+        id: node.id,
+        type: "custom",
+        position: { x: 650, y },
+        data: { ...node, isPatient: false },
       });
     });
 
