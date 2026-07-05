@@ -18,6 +18,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { useRouter } from "next/navigation";
 
 /* ───── types ───── */
 interface Patient { id: number; name: string; age: number; gender: string; demographics?: Record<string, string>; }
@@ -43,6 +44,49 @@ const defaultCat = { color: "#94a3b8", bg: "rgba(148,163,184,.08)", border: "rgb
 const catOf = (t: string) => CAT[t] || defaultCat;
 
 const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+const normalizeNodeType = (node: RawNode, allEdges: RawEdge[]): string => {
+  if (node.type !== "concept") {
+    return node.type;
+  }
+  
+  const labelLower = node.label.toLowerCase();
+  
+  // 1. Check for medications (mg, mcg, ml, names, etc.)
+  const medKeywords = ["metformin", "lisinopril", "atorvastatin", "gabapentin", "insulin", "aspirin", "ibuprofen", "mg", "mcg", "ml", "tablet", "capsule", "pill"];
+  if (medKeywords.some(kw => labelLower.includes(kw))) {
+    return "medication";
+  }
+  
+  // 2. Check for procedures (surgery, laparoscopy, biopsy, excision, etc.)
+  const procedureKeywords = ["surgery", "laparoscopy", "biopsy", "excision", "resection", "reconstruction", "bypass", "transplant", "amputation", "stent", "graft"];
+  if (procedureKeywords.some(kw => labelLower.includes(kw))) {
+    return "surgery";
+  }
+
+  // 3. Check for diseases / conditions
+  const diseaseKeywords = ["diabetes", "neuropathy", "hypertension", "gerd", "asthma", "hyperlipidemia", "retinopathy", "insufficiency", "failure", "infection", "cold", "flu", "pain", "cancer", "tumor", "stroke", "arthritis", "dermatitis"];
+  if (diseaseKeywords.some(kw => labelLower.includes(kw))) {
+    return "disease";
+  }
+
+  // 4. Check edge relationships
+  const edges = allEdges.filter(e => e.source === node.id || e.target === node.id);
+  for (const edge of edges) {
+    const rel = edge.label.toLowerCase();
+    if (rel.includes("diagnosed") || rel.includes("complication") || rel.includes("complicates") || rel.includes("symptom")) {
+      return "disease";
+    }
+    if (rel.includes("prescribed") || rel.includes("treated") || rel.includes("treatment")) {
+      return "medication";
+    }
+    if (rel.includes("undergone") || rel.includes("underwent") || rel.includes("performed")) {
+      return "surgery";
+    }
+  }
+  
+  return "concept";
+};
 
 /* ── Custom Node Component ── */
 /* ── Custom Node Component ── */
@@ -191,6 +235,7 @@ export default function DoctorGraphPage({ params }: { params: Promise<{ id: stri
 function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const patientId = Number(id);
+  const router = useRouter();
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [rawNodes, setRawNodes] = useState<RawNode[]>([]);
@@ -223,7 +268,11 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
       if (pRes.ok) setPatient(await pRes.json());
       if (gRes.ok) {
         const g = await gRes.json();
-        setRawNodes(g.nodes);
+        const normalizedNodes = g.nodes.map((node: RawNode) => ({
+          ...node,
+          type: normalizeNodeType(node, g.edges)
+        }));
+        setRawNodes(normalizedNodes);
         setRawEdges(g.edges);
       }
     } catch (e) {
@@ -1049,7 +1098,16 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
               </div>
 
               {/* view full details button */}
-              <button className="mt-2 w-full py-2.5 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 transition shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-1.5">
+              <button 
+                onClick={() => {
+                  if (selectedNode.type === "report") {
+                    router.push(`/patient/${patientId}/timeline?doc=${encodeURIComponent(selectedNode.label)}`);
+                  } else {
+                    router.push(`/patient/${patientId}/timeline?term=${encodeURIComponent(selectedNode.label)}`);
+                  }
+                }}
+                className="mt-2 w-full py-2.5 rounded-xl text-[11px] font-bold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 transition shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-1.5"
+              >
                 <ExternalLink className="w-3 h-3" /> View full details
               </button>
             </div>

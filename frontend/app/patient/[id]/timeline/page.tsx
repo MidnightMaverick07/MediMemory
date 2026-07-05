@@ -1,6 +1,7 @@
 "use client";
 
 import React, { use, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import { 
   Calendar, 
@@ -45,9 +46,42 @@ export default function PatientTimelinePage({ params }: { params: Promise<{ id: 
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [expandedEvents, setExpandedEvents] = useState<Record<number, boolean>>({});
 
+  const searchParams = useSearchParams();
+  const highlightDoc = searchParams.get("doc");
+  const highlightTerm = searchParams.get("term");
+
   useEffect(() => {
     fetchTimeline();
   }, [patientId]);
+
+  useEffect(() => {
+    if (events.length > 0) {
+      if (highlightDoc) {
+        const match = events.find(ev => ev.document_filename === highlightDoc || String(ev.document_id) === highlightDoc);
+        if (match) {
+          setExpandedEvents(prev => ({ ...prev, [match.id]: true }));
+          setTimeout(() => {
+            const el = document.getElementById(`event-${match.id}`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 450);
+        }
+      } else if (highlightTerm) {
+        const termLower = highlightTerm.toLowerCase();
+        const match = events.find(ev => 
+          ev.event.toLowerCase().includes(termLower) || 
+          ev.diseases.some(d => d.toLowerCase().includes(termLower)) || 
+          ev.medications.some(m => m.toLowerCase().includes(termLower))
+        );
+        if (match) {
+          setExpandedEvents(prev => ({ ...prev, [match.id]: true }));
+          setTimeout(() => {
+            const el = document.getElementById(`event-${match.id}`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 450);
+        }
+      }
+    }
+  }, [events, highlightDoc, highlightTerm]);
 
   const fetchTimeline = async () => {
     setLoading(true);
@@ -155,7 +189,7 @@ export default function PatientTimelinePage({ params }: { params: Promise<{ id: 
               {events.map((ev) => {
                 const isExpanded = !!expandedEvents[ev.id];
                 return (
-                  <div key={ev.id} className="relative group animate-fade-in">
+                  <div key={ev.id} id={`event-${ev.id}`} className="relative group animate-fade-in">
                     
                     {/* Circle Timeline Connector on the Left Border */}
                     <div className="absolute -left-[31px] sm:-left-[39px] top-4 w-4 h-4 rounded-full bg-slate-950 border border-slate-850 flex items-center justify-center ring-4 ring-slate-950 transition-all group-hover:border-indigo-400">
