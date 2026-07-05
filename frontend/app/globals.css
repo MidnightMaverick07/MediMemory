@@ -31,30 +31,38 @@ body {
   color: #0f172a !important;
 }
 
-/* Background overrides */
-.light .bg-slate-950,
-.light .bg-\[\#060b18\],
-.light .bg-\[\#0a1025\]\/80 {
-  background-color: #f8fafc !important;
+/* Background overrides: Match any background classes starting with bg-slate or hexes */
+.light [class*="bg-slate-950"],
+.light [class*="bg-slate-900"],
+.light [class*="bg-[#060b18]"],
+.light [class*="bg-[#0a1025]"],
+.light [class*="bg-[#080e20]"],
+.light [class*="bg-[#0d1530]"] {
+  background-color: #ffffff !important;
   color: #0f172a !important;
 }
 
-.light .bg-slate-900,
-.light .bg-slate-900\/80,
-.light .bg-slate-900\/30,
-.light .bg-\[\#080e20\]\/60,
-.light .bg-\[\#0a1025\]\/60,
-.light .bg-\[\#0d1530\]\/90,
-.light .bg-\[\#0d1530\]\/95 {
-  background-color: #ffffff !important;
+/* Force container divs that are dark gray to have slate-100 backgrounds instead of dark gray */
+.light [class*="bg-slate-950/40"],
+.light [class*="bg-slate-950\\/40"],
+.light [class*="bg-slate-900/10"],
+.light [class*="bg-slate-900\\/10"],
+.light [class*="bg-slate-900/30"],
+.light [class*="bg-slate-900\\/30"],
+.light [class*="bg-slate-900/40"],
+.light [class*="bg-slate-900\\/40"],
+.light [class*="bg-slate-950/80"],
+.light [class*="bg-slate-950\\/80"] {
+  background-color: #f1f5f9 !important; /* light slate-100 fill */
+  border-color: #cbd5e1 !important;
 }
 
-.light .bg-slate-950\/40,
-.light .bg-slate-900\/10,
-.light .bg-slate-900\/40,
-.light .bg-slate-50,
-.light .bg-[#f8fafc] {
-  background-color: #f1f5f9 !important;
+/* Outer layout pages backgrounds should remain slate-50 */
+.light .min-h-screen,
+.light main,
+.light .bg-slate-950,
+.light .bg-[#060b18] {
+  background-color: #f8fafc !important;
 }
 
 /* Border overrides */
@@ -71,9 +79,22 @@ body {
   border-color: #e2e8f0 !important;
 }
 
-/* Text overrides */
-.light .text-slate-100,
-.light .text-white {
+/* Text overrides: headings and text-slate elements */
+.light h1,
+.light h2,
+.light h3,
+.light h4,
+.light h5,
+.light h6 {
+  color: #0f172a !important;
+}
+
+.light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+/* Protect white text inside buttons with dark backgrounds */
+.light .text-white:not(button, button *, a, a *, [class*="bg-indigo"], [class*="bg-violet"], [class*="bg-gradient"]) {
   color: #0f172a !important;
 }
 
@@ -93,6 +114,14 @@ body {
   color: #64748b !important;
 }
 
+/* Contrast adjustment for rose/red text (blood group, etc.) on light backgrounds */
+.light .text-rose-400 {
+  color: #dc2626 !important; /* solid readable red */
+}
+.light .text-rose-300 {
+  color: #be123c !important;
+}
+
 /* Inputs & Form Controls */
 .light select,
 .light input,
@@ -107,7 +136,7 @@ body {
   color: #0f172a !important;
 }
 
-/* Buttons */
+/* Buttons and toggles in light mode */
 .light .bg-slate-800,
 .light .bg-slate-800\/30,
 .light .bg-slate-800\/50 {
@@ -135,7 +164,7 @@ body {
 }
 
 .light header h1 {
-  color: #4f46e5 !important; /* indigo-600 logo */
+  color: #4f46e5 !important; /* Indigo logo */
 }
 
 /* Graph Canvas */
