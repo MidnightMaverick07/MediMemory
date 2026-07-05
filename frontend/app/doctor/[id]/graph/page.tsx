@@ -51,7 +51,7 @@ const CustomNode = ({ data }: { data: any }) => {
   
   if (isPatient) {
     return (
-      <div className={`w-16 h-16 rounded-full flex flex-col items-center justify-center border-2 bg-[#090e20] transition-all duration-300 relative ${isSelected ? 'border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.6)] scale-110' : 'border-violet-500/50'} ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
+      <div className={`reactflow-node-patient w-16 h-16 rounded-full flex flex-col items-center justify-center border-2 bg-[#090e20] transition-all duration-300 relative ${isSelected ? 'border-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.6)] scale-110' : 'border-violet-500/50'} ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
            style={{ animation: isSelected ? "pulse-glow 2s infinite" : undefined }}>
         <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
         <span className="text-white text-base font-black">{initials(label)}</span>
@@ -64,7 +64,7 @@ const CustomNode = ({ data }: { data: any }) => {
   }
 
   return (
-    <div className={`px-3.5 py-2 rounded-xl border flex items-center gap-2.5 bg-[#080d1f]/95 hover:bg-[#0a1129]/100 transition-all duration-300 ${isSelected ? 'scale-105 shadow-xl border-opacity-100' : 'border-opacity-50'}`}
+    <div className={`reactflow-node-concept px-3.5 py-2 rounded-xl border flex items-center gap-2.5 bg-[#080d1f]/95 hover:bg-[#0a1129]/100 transition-all duration-300 ${isSelected ? 'scale-105 shadow-xl border-opacity-100' : 'border-opacity-50'}`}
          style={{
            borderColor: isSelected ? cat.color : cat.border,
            opacity: isDimmed ? 0.3 : 1,

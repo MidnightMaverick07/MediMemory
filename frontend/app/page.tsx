@@ -39,10 +39,10 @@ export default function PatientDirectory() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const saved = (localStorage.getItem("theme") as "light" | "dark") || "dark";
+    const saved = (localStorage.getItem("theme") as "light" | "dark") || "light";
     setTheme(saved);
     if (saved === "light") {
       document.documentElement.classList.add("light");

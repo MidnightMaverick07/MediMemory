@@ -57,6 +57,44 @@ body {
   border-color: #cbd5e1 !important;
 }
 
+/* Match general bg-slate-800, bg-slate-850, and bg-slate-700 button and badge variants */
+.light [class*="bg-slate-800"],
+.light [class*="bg-slate-850"],
+.light [class*="bg-slate-700"] {
+  background-color: #f1f5f9 !important; /* soft light gray background */
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Match Portal Switcher buttons to have indigo-600 text */
+.light [class*="bg-slate-800"].text-indigo-400 {
+  color: #4f46e5 !important;
+}
+
+/* Cyan badges (Current Conditions) overrides */
+.light [class*="bg-cyan-950"],
+.light [class*="bg-cyan-950/40"],
+.light [class*="bg-cyan-950\\/40"] {
+  background-color: #ecfeff !important; /* cyan-50 */
+  color: #0891b2 !important; /* cyan-600 */
+  border-color: #a5f3fc !important; /* cyan-200 */
+}
+.light .text-cyan-400 {
+  color: #0e7490 !important; /* cyan-700 */
+}
+
+/* Amber badges (Active Medications) overrides */
+.light [class*="bg-amber-950"],
+.light [class*="bg-amber-950/40"],
+.light [class*="bg-amber-950\\/40"] {
+  background-color: #fffbeb !important; /* amber-50 */
+  color: #b45309 !important; /* amber-700 */
+  border-color: #fde68a !important; /* amber-200 */
+}
+.light .text-amber-400 {
+  color: #b45309 !important; /* amber-700 */
+}
+
 /* Outer layout pages backgrounds should remain slate-50 */
 .light .min-h-screen,
 .light main,
@@ -189,5 +227,44 @@ body {
 /* Timeline specific overrides */
 .light .before\:bg-slate-800::before {
   background-color: #cbd5e1 !important;
+}
+
+/* Custom React Flow Node overrides in Light Mode */
+.light .reactflow-node-patient {
+  background-color: #ffffff !important;
+  border-color: #818cf8 !important;
+  box-shadow: 0 4px 12px rgba(129, 140, 248, 0.15) !important;
+}
+
+.light .reactflow-node-patient span:first-of-type {
+  color: #4f46e5 !important; /* dark indigo text for initials */
+}
+
+.light .reactflow-node-patient span:last-of-type {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.light .reactflow-node-concept {
+  background-color: #ffffff !important; /* white card background */
+  border-color: #cbd5e1 !important; /* light grey border */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light .reactflow-node-concept:hover {
+  background-color: #f8fafc !important; /* soft slate hover */
+}
+
+.light .reactflow-node-concept .text-slate-100 {
+  color: #0f172a !important; /* dark label text */
+}
+
+.light .reactflow-node-concept .shrink-0 {
+  filter: brightness(0.8) contrast(1.15) !important;
+}
+
+.light .reactflow-node-concept span:last-of-type {
+  filter: brightness(0.8) contrast(1.15) !important;
 }
 
