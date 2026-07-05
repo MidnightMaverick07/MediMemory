@@ -169,10 +169,7 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
   const timelineCount = data?.timeline_additions.length || 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
-      <Header currentPatientId={patientId} activePortal="patient" activeTab="evolution" />
-
-      <main className="flex-1 max-w-6xl w-full mx-auto p-6 flex flex-col gap-6">
+    <div className="flex-1 max-w-6xl w-full mx-auto p-6 flex flex-col gap-6 selection:bg-indigo-500 selection:text-white">
         
         {/* Title */}
         <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 md:p-8 backdrop-blur-sm shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -487,7 +484,6 @@ export default function MemoryEvolutionPage({ params }: { params: Promise<{ id: 
           </div>
         )}
 
-      </main>
     </div>
   );
 }

@@ -361,8 +361,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
 
   /* ───────── RENDER ───────── */
   return (
-    <div className="min-h-screen bg-[#060b18] text-slate-100 flex flex-col" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      {!isMaximized && <Header currentPatientId={patientId} activePortal="doctor" activeTab="graph" />}
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* ── patient stats bar ── */}
       {patient && !isMaximized && (
@@ -396,63 +395,7 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
       {/* ── main 3-column layout ── */}
       <main className="flex-1 flex overflow-hidden">
 
-        {/* ── LEFT SIDEBAR ── */}
-        {!isMaximized && (
-          <aside className="w-[260px] min-w-[260px] border-r border-slate-800/50 bg-[#080e20]/60 overflow-y-auto px-4 py-5 flex flex-col gap-4 scrollbar-thin">
 
-          {/* Active Conditions */}
-          <SidebarCard title="Active Conditions" count={conditions.length} accent="#22d3ee">
-            {conditions.map(c => (
-              <button key={c.id} onClick={() => selectAndCenterNode(c.id)}
-                className="flex items-center gap-2 w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-cyan-500/5 transition group">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                <span className="text-[12px] text-slate-200 group-hover:text-cyan-300 transition truncate">{c.label}</span>
-              </button>
-            ))}
-          </SidebarCard>
-
-          {/* Current Medications */}
-          <SidebarCard title="Current Medications" count={medications.length} accent="#facc15">
-            {medications.map(m => (
-              <button key={m.id} onClick={() => selectAndCenterNode(m.id)}
-                className="flex items-center gap-2 w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-amber-500/5 transition group">
-                <Pill className="w-3 h-3 text-amber-400 shrink-0" />
-                <span className="text-[12px] text-slate-200 group-hover:text-amber-300 transition truncate">{m.label}</span>
-              </button>
-            ))}
-          </SidebarCard>
-
-          {/* Procedures */}
-          <SidebarCard title="Procedures" count={procedures.length} accent="#34d399">
-            {procedures.map(s => (
-              <button key={s.id} onClick={() => selectAndCenterNode(s.id)}
-                className="flex items-center gap-2 w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/5 transition group">
-                <Stethoscope className="w-3 h-3 text-emerald-400 shrink-0" />
-                <span className="text-[12px] text-slate-200 group-hover:text-emerald-300 transition truncate">{s.label}</span>
-              </button>
-            ))}
-          </SidebarCard>
-
-          {/* Reports */}
-          <SidebarCard title="Reports" count={reports.length} accent="#f97316">
-            {reports.map(r => (
-              <button key={r.id} onClick={() => selectAndCenterNode(r.id)}
-                className="flex items-center gap-2 w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-orange-500/5 transition group">
-                <FileText className="w-3 h-3 text-orange-400 shrink-0" />
-                <span className="text-[12px] text-slate-200 group-hover:text-orange-300 transition truncate">{r.label}</span>
-              </button>
-            ))}
-          </SidebarCard>
-
-          {/* Connections summary */}
-          <div className="mt-auto pt-3 border-t border-slate-800/50">
-            <div className="flex items-center justify-between text-[10px] text-slate-500">
-              <span>Nodes: {rawNodes.length}</span>
-              <span>Connections: {rawEdges.length}</span>
-            </div>
-          </div>
-        </aside>
-      )}
 
         {/* ── CENTER GRAPH ── */}
         <div className="flex-1 flex flex-col bg-[#060b18] relative overflow-hidden">
@@ -603,9 +546,6 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
         }
         .react-flow__node:active {
           cursor: grabbing;
-        }
-        .react-flow__attribution {
-          display: none !important;
         }
         @keyframes pulse-glow {
           0%, 100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }

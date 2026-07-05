@@ -323,10 +323,7 @@ export default function DoctorDashboardPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
-      <Header currentPatientId={patientId} activePortal="doctor" activeTab="dashboard" />
-
-      <main className="flex-1 max-w-[1440px] w-full mx-auto p-6 flex flex-col gap-6">
+    <div className="flex-1 w-full max-w-[1440px] mx-auto p-6 flex flex-col gap-6 selection:bg-indigo-500 selection:text-white">
         
         {/* Patient Snapshot Banner */}
         <div className="relative overflow-hidden bg-slate-900/50 border border-slate-800 rounded-3xl p-6 backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-lg">
@@ -767,8 +764,6 @@ export default function DoctorDashboardPage({ params }: { params: Promise<{ id: 
           </div>
 
         </div>
-
-      </main>
 
       <style jsx global>{`
         .scrollbar-thin::-webkit-scrollbar { width: 3px; }

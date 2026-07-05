@@ -271,10 +271,7 @@ export default function PatientUploadPage({ params }: { params: Promise<{ id: st
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <Header currentPatientId={patientId} activePortal="patient" activeTab="upload" />
-
-      <main className="flex-1 max-w-5xl w-full mx-auto p-6 flex flex-col gap-6">
+    <div className="flex-1 max-w-5xl w-full mx-auto p-6 flex flex-col gap-6 selection:bg-indigo-500 selection:text-white">
 
         {/* Upload Panel */}
         <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 md:p-8 backdrop-blur-sm shadow-xl flex flex-col gap-5">
@@ -495,7 +492,6 @@ export default function PatientUploadPage({ params }: { params: Promise<{ id: st
           </div>
         )}
 
-      </main>
     </div>
   );
 }

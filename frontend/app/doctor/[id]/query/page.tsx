@@ -217,8 +217,7 @@ export default function DoctorQueryPage({ params }: { params: Promise<{ id: stri
   const initials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#060b18] text-slate-100 flex flex-col" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <Header currentPatientId={patientId} activePortal="doctor" activeTab="query" />
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* ── patient stats bar ── */}
       {patient && (
@@ -409,7 +408,6 @@ export default function DoctorQueryPage({ params }: { params: Promise<{ id: stri
           )}
         </aside>
       </main>
-
       <style jsx global>{`
         .scrollbar-thin::-webkit-scrollbar { width: 3px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }

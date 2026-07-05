@@ -99,7 +99,7 @@ body {
 .light .min-h-screen,
 .light main,
 .light .bg-slate-950,
-.light .bg-[#060b18] {
+.light .bg-\[\#060b18\] {
   background-color: #f8fafc !important;
 }
 
