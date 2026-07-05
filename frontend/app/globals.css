@@ -136,6 +136,19 @@ body {
   color: #0f172a !important;
 }
 
+.light .text-indigo-300 {
+  color: #4f46e5 !important; /* dark indigo-600 */
+}
+.light .text-indigo-400 {
+  color: #4338ca !important; /* indigo-700 */
+}
+.light .text-violet-300 {
+  color: #7c3aed !important; /* dark violet-600 */
+}
+.light .text-violet-400 {
+  color: #6d28d9 !important; /* violet-700 */
+}
+
 .light .text-slate-200 {
   color: #1e293b !important;
 }

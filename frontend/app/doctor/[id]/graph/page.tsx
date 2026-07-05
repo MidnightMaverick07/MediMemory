@@ -173,14 +173,17 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
       
       // Fine-tuned quadrant mappings for beautiful layout
       if (cat === "disease") baseAngle = -Math.PI / 2; // conditions -> Top
-      else if (cat === "medication") baseAngle = -Math.PI; // medications -> Left
-      else if (cat === "report") baseAngle = Math.PI / 4; // reports -> Bottom-Right
+      else if (cat === "medication") baseAngle = Math.PI; // medications -> Left
       else if (cat === "surgery") baseAngle = (3 * Math.PI) / 4; // surgeries -> Bottom-Left
+      else if (cat === "concept") baseAngle = -(3 * Math.PI) / 4; // concepts -> Top-Left
+      else if (cat === "timeline_event") baseAngle = Math.PI / 2; // timeline events -> Bottom
+      else if (cat === "report") baseAngle = Math.PI / 4; // reports -> Bottom-Right
       else if (cat === "allergy") baseAngle = -Math.PI / 4; // allergies -> Top-Right
       else if (cat === "doctor") baseAngle = -Math.PI / 8; // doctors -> Right
       else if (cat === "hospital") baseAngle = Math.PI / 16; // hospitals -> Right-Bottom
       
-      const angleSpread = N > 1 ? Math.min(Math.PI / 2.5, (N - 1) * 0.28) : 0;
+      // Wider angular spread for large node lists to prevent crowding
+      const angleSpread = N > 1 ? Math.min(Math.PI / 2.2, (N - 1) * (0.35 - Math.min(0.15, N * 0.008))) : 0;
       
       catNodes.forEach((node, i) => {
         let angle = baseAngle;
@@ -188,11 +191,12 @@ function DoctorGraphPageContent({ params }: { params: Promise<{ id: string }> })
           angle = baseAngle - angleSpread / 2 + (i * angleSpread) / (N - 1);
         }
         
-        // Stagger radii to minimize overlap
-        const radius = 230 + (i % 2) * 90;
+        // Stagger radii in 3 tiers to fully avoid overlap
+        const radius = 240 + (i % 3) * 120;
         
-        const x = 450 + radius * Math.cos(angle) - 75; // center offset correction
-        const y = 300 + radius * Math.sin(angle) - 25;
+        // Stretch layout horizontally (ellipse scaling * 1.55) to align with rectangular node card aspect ratio
+        const x = 450 + radius * Math.cos(angle) * 1.55 - 75; // center offset correction
+        const y = 300 + radius * Math.sin(angle) * 0.95 - 25;
         
         result.push({
           id: node.id,
