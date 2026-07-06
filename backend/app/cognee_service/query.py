@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.models import Patient, Document, QueryLog, TimelineEvent
 from app.config import settings
 from app.cognee_service.client import cognee_cloud as cognee
+from app.cognee_service.ingestion import MEDICAL_COGNIFY_PROMPT
 
 logger = logging.getLogger("cognee_service")
 
@@ -42,7 +43,7 @@ async def auto_index_patient(db: Session, patient_id: int, dataset_name: str):
     if indexed_count > 0:
         try:
             logger.info("Auto-indexing: Improving ontology for dataset %s...", dataset_name)
-            await cognee.improve(dataset=dataset_name)
+            await cognee.improve(dataset=dataset_name, custom_prompt=MEDICAL_COGNIFY_PROMPT)
         except Exception as e:
             logger.error("Auto-indexing: Failed to run improve ontology: %s", e)
 
@@ -200,9 +201,10 @@ async def query_patient_memory(db: Session, patient_id: int, question: str, role
             logger.error("Failed to save QueryLog: %s", db_err)
         return result_dict
         
+    # Use multi-search: GRAPH_COMPLETION (knowledge graph reasoning) + CHUNKS (raw text)
     results = None
     try:
-        results = await cognee.recall(
+        results = await cognee.recall_multi(
             query_text=question,
             datasets=[dataset_name]
         )
@@ -211,7 +213,7 @@ async def query_patient_memory(db: Session, patient_id: int, question: str, role
         if "DatasetNotFoundError" in err_msg or "No datasets found" in err_msg or "404" in err_msg:
             await auto_index_patient(db, patient_id, dataset_name)
             try:
-                results = await cognee.recall(
+                results = await cognee.recall_multi(
                     query_text=question,
                     datasets=[dataset_name]
                 )
@@ -220,23 +222,43 @@ async def query_patient_memory(db: Session, patient_id: int, question: str, role
         else:
             logger.exception("Recall failed on first attempt for patient ID %d: %s", patient_id, e)
             
+    # Extract and deduplicate context facts from search results
     context_facts = []
+    seen_texts = set()
     if results:
         if isinstance(results, list):
             for r in results:
+                fact_text = None
                 if isinstance(r, str):
-                    context_facts.append(r)
+                    fact_text = r
                 elif isinstance(r, dict):
-                    context_facts.append(r.get("text", str(r)))
+                    # Try multiple keys that Cognee may return
+                    fact_text = (r.get("text") or r.get("content") or 
+                                 r.get("chunk_text") or r.get("description") or str(r))
                 else:
-                    if hasattr(r, "text"):
-                        context_facts.append(getattr(r, "text"))
-                    elif hasattr(r, "description"):
-                        context_facts.append(getattr(r, "description"))
-                    else:
-                        context_facts.append(str(r))
+                    for attr in ("text", "content", "chunk_text", "description"):
+                        if hasattr(r, attr):
+                            fact_text = getattr(r, attr)
+                            break
+                    if not fact_text:
+                        fact_text = str(r)
+                
+                if fact_text:
+                    normalised = fact_text.strip().lower()
+                    if normalised and normalised not in seen_texts:
+                        seen_texts.add(normalised)
+                        context_facts.append(fact_text.strip())
         else:
             context_facts.append(str(results))
+
+    # Fetch recent timeline events as additional context for the LLM
+    recent_events = db.query(TimelineEvent).filter(
+        TimelineEvent.patient_id == patient_id
+    ).order_by(TimelineEvent.date.desc()).limit(5).all()
+    timeline_context_lines = []
+    for ev in recent_events:
+        timeline_context_lines.append(f"{ev.date}: [{ev.event_type}] {ev.event}")
+    timeline_context = "\n".join(timeline_context_lines) if timeline_context_lines else ""
             
     context_text = "\n".join(context_facts) if context_facts else "No direct matches in semantic graph."
     
@@ -268,8 +290,10 @@ async def query_patient_memory(db: Session, patient_id: int, question: str, role
         f"Patient Profile:\n{profile_summary}\n\n"
         f"Available Reports:\n{reports_summary if reports_summary else 'No reports uploaded.'}\n\n"
         f"Recalled Graph Context:\n{context_text}\n\n"
-        f"Question:\n{question}"
     )
+    if timeline_context:
+        user_prompt += f"Recent Timeline Events:\n{timeline_context}\n\n"
+    user_prompt += f"Question:\n{question}"
     
     try:
         response = await litellm.acompletion(

@@ -2,6 +2,7 @@ import logging
 from sqlalchemy.orm import Session
 from app.db.models import ActivityLog
 from app.cognee_service.client import cognee_cloud as cognee
+from app.cognee_service.ingestion import MEDICAL_COGNIFY_PROMPT
 
 logger = logging.getLogger("cognee_service")
 
@@ -12,14 +13,15 @@ async def enrich_patient_memory(db: Session, patient_id: int):
     try:
         # Call Cognee improve to refine the ontology and merge duplicates
         await cognee.improve(
-            dataset=dataset_name
+            dataset=dataset_name,
+            custom_prompt=MEDICAL_COGNIFY_PROMPT
         )
         
         # Log to Database
         log = ActivityLog(
             patient_id=patient_id,
             event_type="improve",
-            details="Ontology refined. Relationships consolidated and duplicates merged."
+            details="Ontology refined with medical prompt. Relationships consolidated and duplicates merged."
         )
         db.add(log)
         db.commit()
@@ -33,3 +35,4 @@ async def enrich_patient_memory(db: Session, patient_id: int):
         )
         db.add(log)
         db.commit()
+

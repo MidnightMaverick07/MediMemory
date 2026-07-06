@@ -1,4 +1,5 @@
 import os
+import json
 import logging
 import httpx
 import asyncio
@@ -17,19 +18,19 @@ class CogneeCloudClient:
         if self.tenant_id:
             self.headers["X-Tenant-Id"] = self.tenant_id
         
-    async def add(self, data_content: str, dataset_name: str):
+    async def add(self, data_content: str, dataset_name: str, node_set: list[str] = None):
+        """Add text data to Cognee using JSON body (not multipart fake file)."""
         url = f"{self.base_url}/api/v1/add"
-        # Send raw text data as a file-like payload via multipart/form-data
-        files = {
-            "data": ("report.txt", data_content, "text/plain")
+        json_data = {
+            "data": data_content,
+            "dataset_name": dataset_name
         }
-        data = {
-            "datasetName": dataset_name
-        }
+        if node_set:
+            json_data["node_set"] = node_set
         for attempt in range(3):
             try:
                 async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
-                    response = await client.post(url, headers=self.headers, files=files, data=data)
+                    response = await client.post(url, headers=self.headers, json=json_data)
                     response.raise_for_status()
                     return response.json()
             except Exception as e:
@@ -38,13 +39,42 @@ class CogneeCloudClient:
                 logger.warning(f"Add attempt {attempt+1} failed: {e}. Retrying...")
                 await asyncio.sleep(2 * (attempt + 1))
 
-    async def cognify(self, dataset_name: str):
+    async def add_file(self, file_path: str, dataset_name: str, filename: str, node_set: list[str] = None):
+        """Upload a raw file (PDF/TXT) directly to Cognee for server-side parsing."""
+        url = f"{self.base_url}/api/v1/add"
+        ext = os.path.splitext(filename)[1].lower().lstrip(".")
+        mime = {"pdf": "application/pdf", "txt": "text/plain"}.get(ext, "application/octet-stream")
+        
+        for attempt in range(3):
+            try:
+                with open(file_path, "rb") as f:
+                    files = {"data": (filename, f, mime)}
+                    data = {"datasetName": dataset_name}
+                    if node_set:
+                        data["node_set"] = json.dumps(node_set)
+                    async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
+                        response = await client.post(url, headers=self.headers, files=files, data=data)
+                        response.raise_for_status()
+                        return response.json()
+            except Exception as e:
+                if attempt == 2:
+                    raise e
+                logger.warning(f"Add file attempt {attempt+1} failed: {e}. Retrying...")
+                await asyncio.sleep(2 * (attempt + 1))
+
+    async def cognify(self, dataset_name: str, custom_prompt: str = None, chunk_size: int = None):
+        """Trigger cognify to build the knowledge graph, with optional medical prompt."""
         # 1. Trigger cognify
         url = f"{self.base_url}/api/v1/cognify"
         json_data = {
             "datasets": [dataset_name],
             "run_in_background": True
         }
+        if custom_prompt:
+            json_data["custom_prompt"] = custom_prompt
+        if chunk_size:
+            json_data["chunk_size"] = chunk_size
+            
         for attempt in range(3):
             try:
                 async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
@@ -68,16 +98,18 @@ class CogneeCloudClient:
         await self._poll_cognify_status(dataset_uuid)
         return cognify_resp
 
-    async def search(self, query_text: str, dataset_name: str, search_type: str = "INSIGHTS") -> list:
+    async def search(self, query_text: str, dataset_name: str, search_type: str = "GRAPH_COMPLETION", top_k: int = 10) -> list:
+        """Search Cognee with a valid search type (GRAPH_COMPLETION, CHUNKS, HYBRID_COMPLETION)."""
         url = f"{self.base_url}/api/v1/search"
         json_data = {
             "query": query_text,
             "search_type": search_type,
-            "datasets": [dataset_name]
+            "datasets": [dataset_name],
+            "top_k": top_k
         }
         for attempt in range(2):
             try:
-                async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
                     response = await client.post(url, headers=self.headers, json=json_data)
                     response.raise_for_status()
                     resp_json = response.json()
@@ -95,6 +127,17 @@ class CogneeCloudClient:
             # If backend returns wrapping dict like {"results": [...]}
             return resp_json.get("results", [resp_json])
         return [str(resp_json)]
+
+    async def search_multi(self, query_text: str, dataset_name: str, top_k: int = 10) -> list:
+        """Search with GRAPH_COMPLETION + CHUNKS and merge results."""
+        all_results = []
+        for search_type in ["GRAPH_COMPLETION", "CHUNKS"]:
+            try:
+                results = await self.search(query_text, dataset_name, search_type=search_type, top_k=top_k)
+                all_results.extend(results)
+            except Exception as e:
+                logger.warning(f"search_multi: {search_type} search failed: {e}. Continuing with other types.")
+        return all_results
 
     async def forget(self, dataset_name: str):
         dataset_uuid = await self._get_dataset_uuid(dataset_name)
@@ -136,11 +179,13 @@ class CogneeCloudClient:
         return None
 
     async def _poll_cognify_status(self, dataset_uuid: str):
+        """Poll cognify status: 60 attempts × 5s = 5 minutes max."""
         url = f"{self.base_url}/api/v1/datasets/status/"
         params = {
             "dataset": dataset_uuid
         }
-        max_attempts = 45
+        max_attempts = 60
+        poll_interval = 5
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             for attempt in range(max_attempts):
                 try:
@@ -163,7 +208,7 @@ class CogneeCloudClient:
                     if attempt == max_attempts - 1:
                         raise e
                         
-                await asyncio.sleep(2)
+                await asyncio.sleep(poll_interval)
             
             raise TimeoutError(f"Cognee Cloud cognify pipeline timed out for dataset {dataset_uuid}.")
 
@@ -174,21 +219,37 @@ class CogneeCloudWrapper:
     def init_client(self, api_key: str, base_url: str, tenant_id: str = None):
         self.client = CogneeCloudClient(api_key, base_url, tenant_id)
 
-    async def remember(self, data: str, dataset_name: str):
+    async def remember(self, data: str, dataset_name: str, node_set: list[str] = None):
+        """Add text data to Cognee via JSON body."""
         if not self.client:
             raise RuntimeError("CogneeCloudClient not initialized.")
-        return await self.client.add(data, dataset_name)
+        return await self.client.add(data, dataset_name, node_set=node_set)
 
-    async def improve(self, dataset: str):
+    async def remember_file(self, file_path: str, dataset_name: str, filename: str, node_set: list[str] = None):
+        """Upload a raw file (PDF/TXT) directly to Cognee."""
         if not self.client:
             raise RuntimeError("CogneeCloudClient not initialized.")
-        return await self.client.cognify(dataset)
+        return await self.client.add_file(file_path, dataset_name, filename, node_set=node_set)
 
-    async def recall(self, query_text: str, datasets: list):
+    async def improve(self, dataset: str, custom_prompt: str = None):
+        """Run cognify to build/refine the knowledge graph."""
+        if not self.client:
+            raise RuntimeError("CogneeCloudClient not initialized.")
+        return await self.client.cognify(dataset, custom_prompt=custom_prompt)
+
+    async def recall(self, query_text: str, datasets: list, search_type: str = "GRAPH_COMPLETION"):
+        """Search Cognee with a single search type."""
         if not self.client:
             raise RuntimeError("CogneeCloudClient not initialized.")
         dataset_name = datasets[0] if datasets else "default"
-        return await self.client.search(query_text, dataset_name)
+        return await self.client.search(query_text, dataset_name, search_type=search_type)
+
+    async def recall_multi(self, query_text: str, datasets: list):
+        """Search with GRAPH_COMPLETION + CHUNKS and merge results."""
+        if not self.client:
+            raise RuntimeError("CogneeCloudClient not initialized.")
+        dataset_name = datasets[0] if datasets else "default"
+        return await self.client.search_multi(query_text, dataset_name)
 
     async def forget(self, dataset: str):
         if not self.client:
@@ -208,4 +269,3 @@ async def init_cognee_service():
         logger.warning("COGNEE_API_KEY is not set in backend configurations.")
     cognee_cloud.init_client(api_key, base_url, tenant_id)
     logger.info("Cognee Cloud Wrapper service initialized successfully.")
-

@@ -264,7 +264,8 @@ async def generate_clinical_summary(db: Session, patient_id: int) -> str:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            api_key=settings.GEMINI_API_KEY
+            api_key=settings.GEMINI_API_KEY,
+            num_retries=3
         )
         content = response.choices[0].message.content.strip()
         
